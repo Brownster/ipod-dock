@@ -6,15 +6,26 @@ import logging
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from importlib import resources
 
 from . import config
 from .logging_setup import setup_logging
-from .api_helpers import save_to_queue, get_tracks, remove_track
+from .api_helpers import (
+    save_to_queue,
+    get_tracks,
+    remove_track,
+    list_queue,
+    clear_queue,
+    get_stats,
+)
+from . import sync_from_queue
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ipod-dock")
+static_dir = resources.files("ipod_sync").joinpath("static")
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -71,6 +82,32 @@ async def delete_track(track_id: str) -> dict:
         logger.error("Failed to delete track %s: %s", track_id, exc)
         raise HTTPException(500, str(exc))
     return {"deleted": track_id}
+
+
+@app.get("/queue")
+async def queue() -> list[dict]:
+    """Return the list of files waiting in the sync queue."""
+    return list_queue()
+
+
+@app.post("/queue/clear")
+async def queue_clear() -> dict:
+    """Remove all files from the sync queue."""
+    clear_queue()
+    return {"cleared": True}
+
+
+@app.post("/sync")
+async def sync() -> dict:
+    """Trigger a sync of queued files."""
+    sync_from_queue.sync_queue(config.IPOD_DEVICE)
+    return {"synced": True}
+
+
+@app.get("/stats")
+async def stats() -> dict:
+    """Return high level statistics for the dashboard."""
+    return get_stats(config.IPOD_DEVICE)
 
 
 def main() -> None:
