@@ -12,6 +12,7 @@ from importlib import resources
 from . import config
 from .auth import verify_api_key
 from .logging_setup import setup_logging
+from .playback import SerialPlayback
 from .api_helpers import (
     save_to_queue,
     get_tracks,
@@ -31,6 +32,7 @@ static_dir = resources.files("ipod_sync").joinpath("static")
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 auth_dep = Depends(verify_api_key)
+playback_controller = SerialPlayback()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -71,6 +73,8 @@ async def tracks() -> list[dict]:
     """Return the list of tracks currently on the iPod."""
     try:
         return get_tracks(config.IPOD_DEVICE)
+    except HTTPException as exc:
+        raise exc
     except Exception as exc:
         logger.error("Failed to list tracks: %s", exc)
         raise HTTPException(500, str(exc))
@@ -152,6 +156,28 @@ async def podcasts_fetch(payload: dict) -> dict:
         logger.error("Failed to fetch podcasts: %s", exc)
         raise HTTPException(500, str(exc))
     return {"downloaded": [p.name for p in downloaded]}
+
+
+@app.post('/control/{cmd}', dependencies=[auth_dep])
+async def control(cmd: str) -> dict:
+    try:
+        if cmd == 'play':
+            playback_controller.play_pause()
+        elif cmd == 'pause':
+            playback_controller.play_pause()
+        elif cmd == 'next':
+            playback_controller.next_track()
+        elif cmd == 'prev':
+            playback_controller.prev_track()
+        else:
+            raise HTTPException(400, 'invalid command')
+    except HTTPException as exc:
+        raise exc
+    except Exception as exc:  # pragma: no cover - runtime errors
+        logger.error('Playback command %s failed: %s', cmd, exc)
+        raise HTTPException(500, str(exc))
+    return {'status': 'ok'}
+
 
 
 def main() -> None:

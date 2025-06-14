@@ -5,6 +5,7 @@ __all__ = [
     "app",
     "config",
     "libpod_wrapper",
+    "playback",
     "utils",
     "sync_from_queue",
     "watcher",
@@ -14,4 +15,3 @@ __all__ = [
     "templates",
 ]
 
-__version__ = "0.1.0"
