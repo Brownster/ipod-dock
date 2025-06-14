@@ -1,6 +1,7 @@
 """Configuration for ipod_sync package."""
 
 from pathlib import Path
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SYNC_QUEUE_DIR = PROJECT_ROOT / "sync_queue"
@@ -16,4 +17,8 @@ IPOD_DEVICE = "/dev/sda1"
 
 # Whether to keep a copy of files after they are successfully synced.
 KEEP_LOCAL_COPY = False
+
+# Shared secret used to authenticate API requests. Set the ``IPOD_API_KEY``
+# environment variable to override. If ``None`` authentication is disabled.
+API_KEY = os.getenv("IPOD_API_KEY")
 
