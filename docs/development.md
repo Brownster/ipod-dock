@@ -45,3 +45,19 @@ The module exposes three simple helpers:
 
 If the bindings are missing a `RuntimeError` will be raised when any of these
 functions are called.
+
+## Syncing from the queue
+
+`ipod_sync.sync_from_queue` provides a helper script to import any files placed
+in the `sync_queue/` directory.  It mounts the configured iPod device, calls
+`add_track()` for each queued file and ejects the iPod once finished.  By
+default files are removed from the queue after a successful import.
+
+Run the script manually with:
+
+```bash
+python -m ipod_sync.sync_from_queue --device /dev/sda1
+```
+
+The `--device` argument may be omitted if your iPod is available at the default
+path configured in `config.IPOD_DEVICE`.
