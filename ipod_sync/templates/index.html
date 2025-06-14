@@ -10,7 +10,7 @@
     <div class="container">
         <div class="header">
             <h1>🎵 iPod Dock</h1>
-            <p>Wireless Music & Audiobook Manager</p>
+            <p>Wireless Music, Audiobook & Podcast Manager</p>
         </div>
 
         <div class="stats-grid">
@@ -21,6 +21,10 @@
             <div class="stat-card">
                 <div class="stat-number" id="audiobook-count">0</div>
                 <div class="stat-label">Audiobooks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="podcast-count">0</div>
+                <div class="stat-label">Podcasts</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="storage-used">0%</div>
@@ -56,6 +60,7 @@
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('music', this)">🎵 Music</div>
                     <div class="tab" onclick="switchTab('audiobooks', this)">📚 Audiobooks</div>
+                    <div class="tab" onclick="switchTab('podcasts', this)">🎙️ Podcasts</div>
                     <div class="tab" onclick="switchTab('queue', this)">⏳ Queue</div>
                     <div class="tab" onclick="switchTab('playlists', this)">📃 Playlists</div>
                 </div>

@@ -36,6 +36,15 @@ def test_upload_category_endpoint(mock_save):
     mock_save.assert_called_once_with("foo.m4b", b"abc", category="audiobook")
 
 
+@mock.patch.object(app_module, "save_to_queue")
+def test_upload_podcast_category(mock_save):
+    mock_save.return_value = Path("sync_queue/podcast/ep.mp3")
+    response = client.post("/upload/podcast", files={"file": ("ep.mp3", b"abc")})
+    assert response.status_code == 200
+    assert response.json() == {"queued": "ep.mp3", "category": "podcast"}
+    mock_save.assert_called_once_with("ep.mp3", b"abc", category="podcast")
+
+
 def test_upload_category_invalid():
     response = client.post("/upload/invalid", files={"file": ("foo.mp3", b"abc")})
     assert response.status_code == 400
@@ -110,6 +119,15 @@ def test_sync_endpoint(mock_sync):
     assert response.status_code == 200
     assert response.json() == {"synced": True}
     mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
+
+
+@mock.patch.object(app_module, "podcast_fetcher")
+def test_podcasts_fetch_endpoint(mock_fetcher):
+    mock_fetcher.fetch_podcasts.return_value = [Path("sync_queue/podcast/ep.mp3")]
+    response = client.post("/podcasts/fetch", json={"feed_url": "http://f"})
+    assert response.status_code == 200
+    assert response.json() == {"downloaded": ["ep.mp3"]}
+    mock_fetcher.fetch_podcasts.assert_called_once_with("http://f")
 
 
 @mock.patch.object(app_module, "get_stats", return_value={"music": 1})

@@ -8,6 +8,7 @@ __all__ = [
     "utils",
     "sync_from_queue",
     "watcher",
+    "podcast_fetcher",
     "logging_setup",
     "templates",
 ]

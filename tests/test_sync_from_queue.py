@@ -59,6 +59,22 @@ def test_keep_local_copy(mock_mount, mock_eject, mock_add, tmp_path):
     assert file_path.exists()
 
 
+@mock.patch("ipod_sync.sync_from_queue.add_track")
+@mock.patch("ipod_sync.sync_from_queue.eject_ipod")
+@mock.patch("ipod_sync.sync_from_queue.mount_ipod")
+def test_sync_recurses_subdirs(mock_mount, mock_eject, mock_add, tmp_path):
+    queue = tmp_path / "queue"
+    sub = queue / "podcast"
+    sub.mkdir(parents=True)
+    f = sub / "ep.mp3"
+    f.write_text("x")
+
+    with mock.patch.object(sync_from_queue, "config", mock.Mock(SYNC_QUEUE_DIR=queue, IPOD_DEVICE="/dev/ipod", KEEP_LOCAL_COPY=False)):
+        sync_from_queue.sync_queue("/dev/ipod")
+
+    mock_add.assert_called_once_with(f)
+
+
 @mock.patch("ipod_sync.sync_from_queue.add_track", side_effect=RuntimeError("boom"))
 @mock.patch("ipod_sync.sync_from_queue.eject_ipod")
 @mock.patch("ipod_sync.sync_from_queue.mount_ipod")

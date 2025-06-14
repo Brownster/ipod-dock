@@ -28,6 +28,8 @@ function updateUploadPrompt() {
     if (!uploadText) return;
     if (currentTab === 'audiobooks') {
         uploadText.innerHTML = '<strong>Drop audiobook files here</strong><br>or click to browse';
+    } else if (currentTab === 'podcasts') {
+        uploadText.innerHTML = '<strong>Drop podcast files here</strong><br>or click to browse';
     } else if (currentTab === 'music') {
         uploadText.innerHTML = '<strong>Drop music files here</strong><br>or click to browse';
     } else {
@@ -65,7 +67,9 @@ async function handleFiles(files) {
         const file = files[i];
         const formData = new FormData();
         let endpoint = '/upload';
-        if (file.name.endsWith('.m4b')) {
+        if (currentTab === 'podcasts') {
+            endpoint += '/podcast';
+        } else if (file.name.endsWith('.m4b')) {
             endpoint += '/audiobook';
         } else {
             endpoint += '/music';
@@ -102,8 +106,10 @@ async function loadTracks() {
         return;
     } else if (currentTab === 'audiobooks') {
         filteredTracks = tracks.filter(t => t.type === 'audiobook');
+    } else if (currentTab === 'podcasts') {
+        filteredTracks = tracks.filter(t => t.type === 'podcast');
     } else {
-        filteredTracks = tracks.filter(t => t.type !== 'audiobook');
+        filteredTracks = tracks.filter(t => t.type !== 'audiobook' && t.type !== 'podcast');
     }
     grid.innerHTML = filteredTracks.length === 0 ?
         '<div style="text-align: center; color: #666; padding: 40px;">No tracks found</div>' :
@@ -214,6 +220,9 @@ async function updateStats() {
     const stats = await res.json();
     document.getElementById('music-count').textContent = stats.music;
     document.getElementById('audiobook-count').textContent = stats.audiobooks;
+    if (stats.podcasts !== undefined) {
+        document.getElementById('podcast-count').textContent = stats.podcasts;
+    }
     document.getElementById('storage-used').textContent = stats.storage_used + '%';
     document.getElementById('sync-queue').textContent = stats.queue;
 }
