@@ -18,6 +18,8 @@ from .api_helpers import (
     list_queue,
     clear_queue,
     get_stats,
+    get_playlists,
+    create_new_playlist,
 )
 from . import sync_from_queue
 
@@ -82,6 +84,31 @@ async def delete_track(track_id: str) -> dict:
         logger.error("Failed to delete track %s: %s", track_id, exc)
         raise HTTPException(500, str(exc))
     return {"deleted": track_id}
+
+
+@app.get("/playlists")
+async def playlists() -> list[dict]:
+    """Return playlists and their track IDs."""
+    try:
+        return get_playlists(config.IPOD_DEVICE)
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        logger.error("Failed to list playlists: %s", exc)
+        raise HTTPException(500, str(exc))
+
+
+@app.post("/playlists")
+async def playlists_create(payload: dict) -> dict:
+    """Create a new playlist from selected track IDs."""
+    name = payload.get("name")
+    tracks = payload.get("tracks", [])
+    if not name:
+        raise HTTPException(400, "name required")
+    try:
+        create_new_playlist(name, [str(t) for t in tracks], config.IPOD_DEVICE)
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        logger.error("Failed to create playlist %s: %s", name, exc)
+        raise HTTPException(500, str(exc))
+    return {"created": name}
 
 
 @app.get("/queue")

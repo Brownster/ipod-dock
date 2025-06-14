@@ -111,3 +111,50 @@ def list_tracks() -> list[dict]:
     db.close()
     return tracks
 
+
+def list_playlists() -> list[dict]:
+    """Return playlists on the iPod with their track IDs."""
+
+    db = _get_db()
+    logger.debug("Listing playlists from iPod")
+    playlists = []
+    for pl in getattr(db, "playlists", []):
+        playlists.append(
+            {
+                "name": getattr(pl, "name", None),
+                "tracks": [str(getattr(t, "dbid", "")) for t in getattr(pl, "tracks", [])],
+            }
+        )
+    db.close()
+    return playlists
+
+
+def create_playlist(name: str, track_ids: list[str]) -> None:
+    """Create a playlist containing the given track IDs."""
+
+    db = _get_db()
+    logger.info("Creating playlist %s", name)
+    playlist = db.new_playlist(name)
+    id_map = {str(getattr(t, "dbid", "")): t for t in getattr(db, "tracks", [])}
+
+    for tid in track_ids:
+        track = id_map.get(str(tid))
+        if not track:
+            continue
+        if hasattr(playlist, "add_track"):
+            playlist.add_track(track)
+        elif hasattr(playlist, "add"):
+            playlist.add(track)
+        elif hasattr(db, "playlist_add_track"):
+            db.playlist_add_track(playlist, track)
+
+    if hasattr(db, "add_playlist"):
+        db.add_playlist(playlist)
+    elif hasattr(db, "add"):
+        db.add(playlist)
+    elif hasattr(db, "playlists"):
+        db.playlists.append(playlist)
+
+    db.copy_delayed_files()
+    db.close()
+

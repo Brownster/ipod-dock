@@ -1,5 +1,6 @@
 let currentTab = 'music';
 let tracks = [];
+let selectedTracks = new Set();
 let uploadQueue = [];
 
 async function initializeApp() {
@@ -96,6 +97,9 @@ async function loadTracks() {
     if (currentTab === 'queue') {
         await loadQueue();
         return;
+    } else if (currentTab === 'playlists') {
+        await loadPlaylists();
+        return;
     } else if (currentTab === 'audiobooks') {
         filteredTracks = tracks.filter(t => t.type === 'audiobook');
     } else {
@@ -105,6 +109,7 @@ async function loadTracks() {
         '<div style="text-align: center; color: #666; padding: 40px;">No tracks found</div>' :
         filteredTracks.map(track => `
             <div class="track-item ${track.type || ''}">
+                <input type="checkbox" class="select-box" onchange="toggleTrack('${track.id}', this)" ${selectedTracks.has(String(track.id)) ? 'checked' : ''}>
                 <div class="track-title">${track.title || ''}</div>
                 <div class="track-meta">
                     <span>${track.artist || ''} • ${track.album || ''}</span>
@@ -135,6 +140,51 @@ async function loadQueue() {
         `).join('');
 }
 
+async function loadPlaylists() {
+    const res = await fetch('/playlists');
+    const pls = await res.json();
+    const grid = document.getElementById('track-grid');
+    grid.innerHTML = pls.length === 0 ?
+        '<div style="text-align: center; color: #666; padding: 40px;">No playlists</div>' :
+        pls.map(pl => `
+            <div class="track-item">
+                <div class="track-title">${pl.name}</div>
+                <div class="track-meta">
+                    <span>${pl.tracks.length} tracks</span>
+                </div>
+            </div>
+        `).join('');
+}
+
+function toggleTrack(id, cb) {
+    if (cb.checked) {
+        selectedTracks.add(String(id));
+    } else {
+        selectedTracks.delete(String(id));
+    }
+}
+
+function openPlaylistDialog() {
+    if (selectedTracks.size === 0) {
+        showNotification('Select tracks first', 'error');
+        return;
+    }
+    const name = prompt('Playlist name');
+    if (!name) return;
+    createPlaylist(name, Array.from(selectedTracks));
+}
+
+async function createPlaylist(name, ids) {
+    await fetch('/playlists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, tracks: ids })
+    });
+    selectedTracks.clear();
+    if (currentTab === 'playlists') loadTracks();
+    showNotification('Playlist created', 'success');
+}
+
 function handleSearch() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const filteredTracks = tracks.filter(track =>
@@ -145,6 +195,7 @@ function handleSearch() {
     const grid = document.getElementById('track-grid');
     grid.innerHTML = filteredTracks.map(track => `
         <div class="track-item ${track.type || ''}">
+            <input type="checkbox" class="select-box" onchange="toggleTrack('${track.id}', this)" ${selectedTracks.has(String(track.id)) ? 'checked' : ''}>
             <div class="track-title">${track.title || ''}</div>
             <div class="track-meta">
                 <span>${track.artist || ''} • ${track.album || ''}</span>

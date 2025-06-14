@@ -30,6 +30,17 @@ def test_get_tracks_mounts_and_ejects(mock_mount, mock_eject, mock_list):
     assert tracks == [{"id": "1"}]
 
 
+@mock.patch("ipod_sync.api_helpers.list_playlists")
+@mock.patch("ipod_sync.api_helpers.eject_ipod")
+@mock.patch("ipod_sync.api_helpers.mount_ipod")
+def test_get_playlists_calls_lib(mock_mount, mock_eject, mock_list):
+    mock_list.return_value = [{"name": "Mix"}]
+    pls = api_helpers.get_playlists("/dev/ipod")
+    mock_mount.assert_called_once_with("/dev/ipod")
+    mock_eject.assert_called_once()
+    assert pls == [{"name": "Mix"}]
+
+
 @mock.patch("ipod_sync.api_helpers.delete_track")
 @mock.patch("ipod_sync.api_helpers.eject_ipod")
 @mock.patch("ipod_sync.api_helpers.mount_ipod")
@@ -62,3 +73,13 @@ def test_get_stats_uses_shutil(mock_queue, mock_tracks, tmp_path):
     assert stats["music"] == 1
     assert stats["queue"] == 1
     assert stats["storage_used"] == 25
+
+
+@mock.patch("ipod_sync.api_helpers.create_playlist")
+@mock.patch("ipod_sync.api_helpers.eject_ipod")
+@mock.patch("ipod_sync.api_helpers.mount_ipod")
+def test_create_new_playlist(mock_mount, mock_eject, mock_create):
+    api_helpers.create_new_playlist("Mix", ["1"], "/dev/ipod")
+    mock_mount.assert_called_once_with("/dev/ipod")
+    mock_create.assert_called_once_with("Mix", ["1"])
+    mock_eject.assert_called_once()

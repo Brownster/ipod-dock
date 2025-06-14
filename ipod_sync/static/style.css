@@ -238,6 +238,9 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     border-left: 4px solid #667eea;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .track-item:hover {
@@ -247,6 +250,10 @@ body {
 
 .track-item.audiobook {
     border-left-color: #ff7e5f;
+}
+
+.select-box {
+    margin-right: 5px;
 }
 
 .track-title {

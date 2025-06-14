@@ -18,10 +18,21 @@ class FakeTrack:
         self.album = "Album"
 
 
+class FakePlaylist:
+    def __init__(self, name):
+        self.name = name
+        self.tracks = []
+
+    def add_track(self, track):
+        self.tracks.append(track)
+
+
 class FakeDatabase:
     def __init__(self):
         self.tracks = []
+        self.playlists = []
         self.new_track_called_with = None
+        self.new_playlist_called_with = None
         self.copy_called = False
         self.closed = False
 
@@ -31,6 +42,13 @@ class FakeDatabase:
 
     def add_track(self, track):
         self.tracks.append(track)
+
+    def new_playlist(self, name):
+        self.new_playlist_called_with = name
+        return FakePlaylist(name)
+
+    def add_playlist(self, playlist):
+        self.playlists.append(playlist)
 
     def copy_delayed_files(self):
         self.copy_called = True
@@ -120,3 +138,33 @@ def test_delete_track_not_found(tmp_path):
          mock.patch.object(wrapper, "IPOD_MOUNT", mount):
         with pytest.raises(KeyError):
             wrapper.delete_track("99")
+
+
+def test_list_playlists(tmp_path):
+    fake = FakeGpod()
+    pl = FakePlaylist("Mix")
+    track = FakeTrack("/file", dbid="1")
+    pl.add_track(track)
+    fake.db.playlists.append(pl)
+    mount = tmp_path / "mnt"
+    mount.mkdir()
+    with mock.patch.object(wrapper, "gpod", fake), \
+         mock.patch.object(wrapper, "IPOD_MOUNT", mount):
+        playlists = wrapper.list_playlists()
+        assert playlists == [{"name": "Mix", "tracks": ["1"]}]
+        assert fake.db.closed
+
+
+def test_create_playlist(tmp_path):
+    fake = FakeGpod()
+    track = FakeTrack("/file", dbid="1")
+    fake.db.tracks.append(track)
+    mount = tmp_path / "mnt"
+    mount.mkdir()
+    with mock.patch.object(wrapper, "gpod", fake), \
+         mock.patch.object(wrapper, "IPOD_MOUNT", mount):
+        wrapper.create_playlist("MyList", ["1"])
+        assert fake.db.new_playlist_called_with == "MyList"
+        assert fake.db.playlists[0].tracks == [track]
+        assert fake.db.copy_called
+        assert fake.db.closed
