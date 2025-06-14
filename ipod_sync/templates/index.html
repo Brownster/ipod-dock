@@ -57,9 +57,14 @@
                     <div class="tab active" onclick="switchTab('music', this)">🎵 Music</div>
                     <div class="tab" onclick="switchTab('audiobooks', this)">📚 Audiobooks</div>
                     <div class="tab" onclick="switchTab('queue', this)">⏳ Queue</div>
+                    <div class="tab" onclick="switchTab('playlists', this)">📃 Playlists</div>
                 </div>
 
                 <input type="text" class="search-bar" placeholder="🔍 Search your library..." id="search-input">
+
+                <div style="margin-bottom: 10px;">
+                    <button class="btn" onclick="openPlaylistDialog()">➕ Create Playlist</button>
+                </div>
 
                 <div class="track-grid" id="track-grid">
                 </div>

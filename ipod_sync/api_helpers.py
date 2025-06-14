@@ -6,7 +6,12 @@ import logging
 from pathlib import Path
 
 from . import config
-from .libpod_wrapper import list_tracks, delete_track
+from .libpod_wrapper import (
+    list_tracks,
+    delete_track,
+    list_playlists,
+    create_playlist,
+)
 from .utils import mount_ipod, eject_ipod
 
 logger = logging.getLogger(__name__)
@@ -59,11 +64,29 @@ def get_tracks(device: str = config.IPOD_DEVICE) -> list[dict]:
         eject_ipod()
 
 
+def get_playlists(device: str = config.IPOD_DEVICE) -> list[dict]:
+    """Mount the iPod and return a list of playlists."""
+    mount_ipod(device)
+    try:
+        return list_playlists()
+    finally:
+        eject_ipod()
+
+
 def remove_track(db_id: str, device: str = config.IPOD_DEVICE) -> None:
     """Delete a track from the iPod by its database ID."""
     mount_ipod(device)
     try:
         delete_track(db_id)
+    finally:
+        eject_ipod()
+
+
+def create_new_playlist(name: str, track_ids: list[str], device: str = config.IPOD_DEVICE) -> None:
+    """Create a playlist with ``track_ids`` on the iPod."""
+    mount_ipod(device)
+    try:
+        create_playlist(name, track_ids)
     finally:
         eject_ipod()
 

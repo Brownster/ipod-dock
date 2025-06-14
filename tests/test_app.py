@@ -72,6 +72,22 @@ def test_delete_track_not_found(mock_remove):
     mock_remove.assert_called_once_with("99", app_module.config.IPOD_DEVICE)
 
 
+@mock.patch.object(app_module, "get_playlists", return_value=[{"name": "Mix"}])
+def test_playlists_get(mock_get):
+    response = client.get("/playlists")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "Mix"}]
+    mock_get.assert_called_once_with(app_module.config.IPOD_DEVICE)
+
+
+@mock.patch.object(app_module, "create_new_playlist")
+def test_playlists_post(mock_create):
+    response = client.post("/playlists", json={"name": "Mix", "tracks": ["1"]})
+    assert response.status_code == 200
+    assert response.json() == {"created": "Mix"}
+    mock_create.assert_called_once_with("Mix", ["1"], app_module.config.IPOD_DEVICE)
+
+
 @mock.patch.object(app_module, "list_queue", return_value=[{"name": "a.mp3"}])
 def test_queue_endpoint(mock_list):
     response = client.get("/queue")
