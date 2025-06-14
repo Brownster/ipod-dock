@@ -1,0 +1,14 @@
+[Unit]
+Description=iPod FastAPI server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/ipod-dock
+ExecStart=/usr/bin/python3 -m ipod_sync.app
+Restart=on-failure
+User=pi
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
