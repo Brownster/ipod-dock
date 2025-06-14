@@ -40,6 +40,16 @@ async def upload(file: UploadFile = File(...)) -> dict:
     return {"queued": path.name}
 
 
+@app.post("/upload/{category}")
+async def upload_category(category: str, file: UploadFile = File(...)) -> dict:
+    """Upload a file to a specific category such as ``music`` or ``audiobook``."""
+    if category not in {"music", "audiobook"}:
+        raise HTTPException(400, "invalid category")
+    data = await file.read()
+    path = save_to_queue(file.filename, data, category=category)
+    return {"queued": path.name, "category": category}
+
+
 @app.get("/tracks")
 async def tracks() -> list[dict]:
     """Return the list of tracks currently on the iPod."""

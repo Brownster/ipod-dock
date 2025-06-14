@@ -38,6 +38,19 @@ A successful request returns the queued filename:
 
 Files are written to the queue directory on the Pi and processed by the sync script.
 
+### `POST /upload/{category}`
+Upload a file to a specific category. `category` must be either `music` or `audiobook`.
+
+```bash
+curl -F "file=@book.m4b" http://<pi>:8000/upload/audiobook
+```
+
+The response includes the queued filename and the category:
+
+```json
+{"queued": "book.m4b", "category": "audiobook"}
+```
+
 ### `GET /tracks`
 Retrieve the list of tracks currently on the iPod. Each item contains minimal metadata:
 

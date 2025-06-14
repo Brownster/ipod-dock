@@ -82,6 +82,7 @@ Endpoints:
 
 - `GET /status` – simple health check returning `{"status": "ok"}`.
 - `POST /upload` – upload a file; it is saved to `sync_queue/` for later sync.
+- `POST /upload/{category}` – upload a file to a specific category (`music` or `audiobook`).
 - `GET /tracks` – list tracks on the iPod. The iPod is mounted automatically.
 - `DELETE /tracks/{id}` – remove a track by its database ID. The iPod is mounted
   and ejected for the operation.
