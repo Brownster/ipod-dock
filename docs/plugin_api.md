@@ -97,4 +97,4 @@ Return basic dashboard information such as track count, queue size and storage u
 
 ## Notes
 
-Provide the correct `X-API-Key` header with every request or the server will return `401 Unauthorized`. Uploaded files must be in a format supported by the iPod (typically MP3 or AAC); conversion is outside the scope of the API.
+Provide the correct `X-API-Key` header with every request or the server will return `401 Unauthorized`. Uploaded files in formats the iPod does not natively support will be converted to MP3 using `ffmpeg` during the sync step.

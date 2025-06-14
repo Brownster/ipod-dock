@@ -22,3 +22,15 @@ KEEP_LOCAL_COPY = False
 # environment variable to override. If ``None`` authentication is disabled.
 API_KEY = os.getenv("IPOD_API_KEY")
 
+# File extensions that can be synced without conversion.
+SUPPORTED_FORMATS = {
+    ".mp3",
+    ".m4a",
+    ".m4b",
+    ".aac",
+    ".aif",
+    ".aiff",
+    ".wav",
+    ".alac",
+}
+
