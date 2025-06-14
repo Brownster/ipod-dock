@@ -25,3 +25,23 @@ pytest
 
 The tests mock out system calls so they run quickly and without requiring an
 iPod to be attached.
+
+## libgpod wrapper
+
+`ipod_sync.libpod_wrapper` contains helper functions that wrap the optional
+`python-gpod` bindings.  These bindings are not installed by default in the test
+environment, so the unit tests mock them out.  On a Debian based system you can
+install them via:
+
+```bash
+sudo apt-get install python3-gpod libgpod-common
+```
+
+The module exposes three simple helpers:
+
+- `add_track(path)` – import a file into the mounted iPod database.
+- `delete_track(db_id)` – remove a track by its database identifier.
+- `list_tracks()` – return a list of basic metadata for each track.
+
+If the bindings are missing a `RuntimeError` will be raised when any of these
+functions are called.
