@@ -32,7 +32,7 @@ def sync_queue(device: str = config.IPOD_DEVICE) -> None:
     queue = Path(config.SYNC_QUEUE_DIR)
     queue.mkdir(parents=True, exist_ok=True)
 
-    files = [f for f in sorted(queue.iterdir()) if f.is_file()]
+    files = [f for f in sorted(queue.rglob('*')) if f.is_file()]
     if not files:
         logger.info("No files to sync in %s", queue)
         return

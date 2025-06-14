@@ -21,7 +21,7 @@ from .api_helpers import (
     get_playlists,
     create_new_playlist,
 )
-from . import sync_from_queue
+from . import sync_from_queue, podcast_fetcher
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def upload(file: UploadFile = File(...)) -> dict:
 @app.post("/upload/{category}")
 async def upload_category(category: str, file: UploadFile = File(...)) -> dict:
     """Upload a file to a specific category such as ``music`` or ``audiobook``."""
-    if category not in {"music", "audiobook"}:
+    if category not in {"music", "audiobook", "podcast"}:
         raise HTTPException(400, "invalid category")
     data = await file.read()
     path = save_to_queue(file.filename, data, category=category)
@@ -135,6 +135,20 @@ async def sync() -> dict:
 async def stats() -> dict:
     """Return high level statistics for the dashboard."""
     return get_stats(config.IPOD_DEVICE)
+
+
+@app.post("/podcasts/fetch")
+async def podcasts_fetch(payload: dict) -> dict:
+    """Download episodes from an RSS feed into the queue."""
+    feed_url = payload.get("feed_url")
+    if not feed_url:
+        raise HTTPException(400, "feed_url required")
+    try:
+        downloaded = podcast_fetcher.fetch_podcasts(feed_url)
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        logger.error("Failed to fetch podcasts: %s", exc)
+        raise HTTPException(500, str(exc))
+    return {"downloaded": [p.name for p in downloaded]}
 
 
 def main() -> None:

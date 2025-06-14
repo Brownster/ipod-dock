@@ -131,6 +131,7 @@ def get_stats(device: str = config.IPOD_DEVICE, queue_dir: Path | None = None) -
     return {
         'music': len(tracks),
         'audiobooks': 0,
+        'podcasts': 0,
         'queue': len(queue_files),
         'storage_used': used_percent,
     }

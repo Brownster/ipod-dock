@@ -39,7 +39,7 @@ A successful request returns the queued filename:
 Files are written to the queue directory on the Pi and processed by the sync script.
 
 ### `POST /upload/{category}`
-Upload a file to a specific category. `category` must be either `music` or `audiobook`.
+Upload a file to a specific category. `category` must be one of `music`, `audiobook` or `podcast`.
 
 ```bash
 curl -F "file=@book.m4b" http://<pi>:8000/upload/audiobook
@@ -77,6 +77,18 @@ Remove all files from the queue.
 
 ### `POST /sync`
 Import queued files onto the iPod immediately.
+
+### `POST /podcasts/fetch`
+Download episodes from an RSS feed and add them to the queue. The request body
+must provide a JSON object containing `feed_url`.
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"feed_url": "https://example.com/feed.rss"}' \
+     http://<pi>:8000/podcasts/fetch
+```
+
+The response lists the filenames that were downloaded.
 
 ### `GET /stats`
 Return basic dashboard information such as track count, queue size and storage usage.

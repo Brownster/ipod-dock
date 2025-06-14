@@ -71,6 +71,7 @@ def test_get_stats_uses_shutil(mock_queue, mock_tracks, tmp_path):
         du.return_value = mock.Mock(total=100, used=25)
         stats = api_helpers.get_stats("/dev/ipod", tmp_path)
     assert stats["music"] == 1
+    assert stats["podcasts"] == 0
     assert stats["queue"] == 1
     assert stats["storage_used"] == 25
 
