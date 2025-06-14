@@ -12,6 +12,8 @@ python -m ipod_sync.app
 
 By default it listens on port `8000` on all interfaces. The examples below assume the Pi is reachable as `http://<pi>:8000`.
 
+All endpoints require an `X-API-Key` header matching the secret configured on the server. Set the `IPOD_API_KEY` environment variable to define the key.
+
 ## Endpoints
 
 ### `GET /status`
@@ -27,7 +29,7 @@ Upload an audio file. The request must use `multipart/form-data` with a single f
 Example using `curl`:
 
 ```bash
-curl -F "file=@song.mp3" http://<pi>:8000/upload
+curl -H "X-API-Key: <key>" -F "file=@song.mp3" http://<pi>:8000/upload
 ```
 
 A successful request returns the queued filename:
@@ -42,7 +44,7 @@ Files are written to the queue directory on the Pi and processed by the sync scr
 Upload a file to a specific category. `category` must be one of `music`, `audiobook` or `podcast`.
 
 ```bash
-curl -F "file=@book.m4b" http://<pi>:8000/upload/audiobook
+curl -H "X-API-Key: <key>" -F "file=@book.m4b" http://<pi>:8000/upload/audiobook
 ```
 
 The response includes the queued filename and the category:
@@ -83,7 +85,7 @@ Download episodes from an RSS feed and add them to the queue. The request body
 must provide a JSON object containing `feed_url`.
 
 ```bash
-curl -X POST -H "Content-Type: application/json" \
+curl -X POST -H "X-API-Key: <key>" -H "Content-Type: application/json" \
      -d '{"feed_url": "https://example.com/feed.rss"}' \
      http://<pi>:8000/podcasts/fetch
 ```
@@ -95,4 +97,4 @@ Return basic dashboard information such as track count, queue size and storage u
 
 ## Notes
 
-Authentication has not yet been implemented, so the API should only be exposed on trusted networks. Uploaded files must be in a format supported by the iPod (typically MP3 or AAC); conversion is outside the scope of the API.
+Provide the correct `X-API-Key` header with every request or the server will return `401 Unauthorized`. Uploaded files must be in a format supported by the iPod (typically MP3 or AAC); conversion is outside the scope of the API.

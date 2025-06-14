@@ -18,6 +18,14 @@ def test_status_endpoint():
     assert response.json() == {"status": "ok"}
 
 
+def test_auth_required_when_key_set(monkeypatch):
+    monkeypatch.setattr(app_module.config, "API_KEY", "secret")
+    unauthorized = client.get("/status")
+    assert unauthorized.status_code == 401
+    ok = client.get("/status", headers={"X-API-Key": "secret"})
+    assert ok.status_code == 200
+
+
 @mock.patch.object(app_module, "save_to_queue")
 def test_upload_endpoint(mock_save):
     mock_save.return_value = Path("sync_queue/foo.mp3")
