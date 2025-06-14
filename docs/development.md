@@ -86,13 +86,18 @@ Endpoints:
 - `GET /tracks` – list tracks on the iPod. The iPod is mounted automatically.
 - `DELETE /tracks/{id}` – remove a track by its database ID. The iPod is mounted
   and ejected for the operation.
+- `GET /queue` – list files currently waiting in the sync queue.
+- `POST /queue/clear` – remove all files from the queue.
+- `POST /sync` – import queued files onto the iPod immediately.
+- `GET /stats` – return counts for the dashboard (tracks, queue size, disk usage).
 
 The API uses the same rotating log configuration as the sync script.
 
 ## Web UI
 
-When the FastAPI server is running you can open `http://localhost:8000/` in a
-browser to view a very small HTML interface. It is built with the Bootstrap CDN
-and uses JavaScript `fetch()` calls to the API endpoints. The page allows you to
-upload files and shows the list of tracks returned by `GET /tracks` in a table.
+Start the FastAPI server and open `http://localhost:8000/` in a browser to see
+the web dashboard.  The interface loads its CSS and JavaScript from the
+`/static` directory and communicates with the API via `fetch()` calls.  Drag and
+drop files onto the upload area, trigger a manual sync and browse tracks, queued
+files or audiobooks from the tabbed view.
 

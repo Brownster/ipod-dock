@@ -63,6 +63,38 @@ def test_delete_track_not_found(mock_remove):
     assert response.status_code == 404
     mock_remove.assert_called_once_with("99", app_module.config.IPOD_DEVICE)
 
+
+@mock.patch.object(app_module, "list_queue", return_value=[{"name": "a.mp3"}])
+def test_queue_endpoint(mock_list):
+    response = client.get("/queue")
+    assert response.status_code == 200
+    assert response.json() == [{"name": "a.mp3"}]
+    mock_list.assert_called_once()
+
+
+@mock.patch.object(app_module, "clear_queue")
+def test_queue_clear_endpoint(mock_clear):
+    response = client.post("/queue/clear")
+    assert response.status_code == 200
+    assert response.json() == {"cleared": True}
+    mock_clear.assert_called_once()
+
+
+@mock.patch.object(app_module, "sync_from_queue")
+def test_sync_endpoint(mock_sync):
+    response = client.post("/sync")
+    assert response.status_code == 200
+    assert response.json() == {"synced": True}
+    mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
+
+
+@mock.patch.object(app_module, "get_stats", return_value={"music": 1})
+def test_stats_endpoint(mock_stats):
+    response = client.get("/stats")
+    assert response.status_code == 200
+    assert response.json() == {"music": 1}
+    mock_stats.assert_called_once_with(app_module.config.IPOD_DEVICE)
+
 def test_index_page():
     response = client.get("/")
     assert response.status_code == 200

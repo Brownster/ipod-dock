@@ -66,3 +66,48 @@ def remove_track(db_id: str, device: str = config.IPOD_DEVICE) -> None:
         delete_track(db_id)
     finally:
         eject_ipod()
+
+
+def list_queue(queue_dir: Path | None = None) -> list[dict]:
+    """Return information about files waiting in the sync queue."""
+    queue = Path(queue_dir) if queue_dir else Path(config.SYNC_QUEUE_DIR)
+    if not queue.exists():
+        return []
+    files = []
+    for path in queue.rglob('*'):
+        if path.is_file():
+            files.append({
+                'name': path.name,
+                'size': path.stat().st_size,
+            })
+    return files
+
+
+def clear_queue(queue_dir: Path | None = None) -> None:
+    """Remove all files from the sync queue."""
+    queue = Path(queue_dir) if queue_dir else Path(config.SYNC_QUEUE_DIR)
+    if not queue.exists():
+        return
+    for path in queue.rglob('*'):
+        if path.is_file():
+            path.unlink()
+
+
+def get_stats(device: str = config.IPOD_DEVICE, queue_dir: Path | None = None) -> dict:
+    """Return basic statistics for the web UI."""
+    tracks = get_tracks(device)
+    queue_files = list_queue(queue_dir)
+
+    try:
+        import shutil
+        usage = shutil.disk_usage(config.PROJECT_ROOT)
+        used_percent = int(usage.used / usage.total * 100)
+    except Exception:  # pragma: no cover - platform specific failures
+        used_percent = 0
+
+    return {
+        'music': len(tracks),
+        'audiobooks': 0,
+        'queue': len(queue_files),
+        'storage_used': used_percent,
+    }

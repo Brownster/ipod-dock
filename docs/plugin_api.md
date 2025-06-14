@@ -69,6 +69,18 @@ Remove a track by its database identifier. On success the response is:
 
 A `404` status is returned if the track does not exist.
 
+### `GET /queue`
+Return a list of files waiting in the sync queue.
+
+### `POST /queue/clear`
+Remove all files from the queue.
+
+### `POST /sync`
+Import queued files onto the iPod immediately.
+
+### `GET /stats`
+Return basic dashboard information such as track count, queue size and storage usage.
+
 ## Notes
 
 Authentication has not yet been implemented, so the API should only be exposed on trusted networks. Uploaded files must be in a format supported by the iPod (typically MP3 or AAC); conversion is outside the scope of the API.
