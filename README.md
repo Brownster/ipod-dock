@@ -22,3 +22,15 @@ source .venv/bin/activate
 
 This repository will use the virtual environment for any Python tools and future dependencies.
 
+## Syncing files
+
+During the early development phase queued files can be synced manually using the
+`sync_from_queue` module:
+
+```bash
+python -m ipod_sync.sync_from_queue --device /dev/sda1
+```
+
+Any audio files placed in the `sync_queue/` directory will be imported to the
+iPod and removed from the queue.
+
