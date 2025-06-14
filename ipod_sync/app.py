@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse
+from importlib import resources
 
 from . import config
 from .logging_setup import setup_logging
@@ -13,6 +15,14 @@ from .api_helpers import save_to_queue, get_tracks, remove_track
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ipod-dock")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index() -> str:
+    """Serve the simple HTML interface."""
+    logger.debug("Serving index page")
+    page = resources.files("ipod_sync.templates").joinpath("index.html")
+    return page.read_text(encoding="utf-8")
 
 
 @app.get("/status")

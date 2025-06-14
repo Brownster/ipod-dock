@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>iPod Dock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+    <h1 class="mb-4">iPod Dock</h1>
+
+    <form id="upload-form" class="mb-3">
+        <div class="input-group">
+            <input type="file" name="file" class="form-control" required>
+            <button class="btn btn-primary" type="submit">Upload</button>
+        </div>
+    </form>
+
+    <table id="track-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Album</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function loadTracks() {
+            const res = await fetch('/tracks');
+            const tracks = await res.json();
+            const tbody = document.querySelector('#track-table tbody');
+            tbody.innerHTML = '';
+            for (const t of tracks) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${t.id ?? ''}</td><td>${t.title ?? ''}</td><td>${t.artist ?? ''}</td><td>${t.album ?? ''}</td>`;
+                tbody.appendChild(row);
+            }
+        }
+
+        document.getElementById('upload-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const fileInput = e.target.elements.file;
+            if (fileInput.files.length === 0) return;
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            await fetch('/upload', { method: 'POST', body: formData });
+            fileInput.value = '';
+            loadTracks();
+        });
+
+        loadTracks();
+    </script>
+</body>
+</html>

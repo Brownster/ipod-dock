@@ -8,6 +8,7 @@ __all__ = [
     "utils",
     "sync_from_queue",
     "logging_setup",
+    "templates",
 ]
 
 __version__ = "0.1.0"

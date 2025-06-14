@@ -87,3 +87,11 @@ Endpoints:
   and ejected for the operation.
 
 The API uses the same rotating log configuration as the sync script.
+
+## Web UI
+
+When the FastAPI server is running you can open `http://localhost:8000/` in a
+browser to view a very small HTML interface. It is built with the Bootstrap CDN
+and uses JavaScript `fetch()` calls to the API endpoints. The page allows you to
+upload files and shows the list of tracks returned by `GET /tracks` in a table.
+
