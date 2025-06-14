@@ -130,6 +130,20 @@ def test_podcasts_fetch_endpoint(mock_fetcher):
     mock_fetcher.fetch_podcasts.assert_called_once_with("http://f")
 
 
+def test_podcasts_fetch_missing_url():
+    response = client.post("/podcasts/fetch", json={})
+    assert response.status_code == 400
+
+
+@mock.patch.object(app_module, "podcast_fetcher")
+def test_podcasts_fetch_error(mock_fetcher):
+    mock_fetcher.fetch_podcasts.side_effect = RuntimeError("boom")
+    response = client.post("/podcasts/fetch", json={"feed_url": "http://f"})
+    assert response.status_code == 500
+    assert "boom" in response.text
+    mock_fetcher.fetch_podcasts.assert_called_once_with("http://f")
+
+
 @mock.patch.object(app_module, "get_stats", return_value={"music": 1})
 def test_stats_endpoint(mock_stats):
     response = client.get("/stats")
