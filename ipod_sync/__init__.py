@@ -7,6 +7,7 @@ __all__ = [
     "libpod_wrapper",
     "utils",
     "sync_from_queue",
+    "watcher",
     "logging_setup",
     "templates",
 ]

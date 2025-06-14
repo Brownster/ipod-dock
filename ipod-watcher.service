@@ -1,0 +1,12 @@
+[Unit]
+Description=iPod sync queue watcher
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m ipod_sync.watcher
+WorkingDirectory=/home/pi/ipod-dock
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
