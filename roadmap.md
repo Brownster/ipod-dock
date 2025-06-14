@@ -2,7 +2,7 @@ Phase 1 – MVP: Manual Upload & Sync
 #	Task	
 1.1	Set up development repo – create ipod_sync repo, add README, .gitignore, and issue template. ☑
 1.2     Install prerequisites – sudo apt install python3-gpod libgpod-common ffmpeg (Pi OS) + create a venv.    ☑
-1.3	Create project skeleton – folders: ipod_sync/, sync_queue/, uploads/, plus app.py, libpod_wrapper.py, config.py, utils.py.	☐
+1.3	Create project skeleton – folders: ipod_sync/, sync_queue/, uploads/, plus app.py, libpod_wrapper.py, config.py, utils.py.	☑
 1.4	Implement mount helpers (utils.py) – mount_ipod(), eject_ipod(), using subprocess to call mount/umount/eject.	☐
 1.5	Write libgpod wrapper (libpod_wrapper.py) – functions: add_track(filepath), delete_track(db_id), list_tracks().	☐
 1.6	Implement simple sync script (sync_from_queue.py) – watches sync_queue/, mounts iPod, calls add_track(), ejects.	☐
