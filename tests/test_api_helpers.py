@@ -13,6 +13,11 @@ def test_save_to_queue_writes_file(tmp_path):
     assert dest.exists()
     assert dest.read_bytes() == b"data"
 
+def test_save_to_queue_category(tmp_path):
+    dest = api_helpers.save_to_queue("b.mp3", b"data", tmp_path, category="music")
+    assert dest.parent.name == "music"
+    assert dest.exists()
+
 
 @mock.patch("ipod_sync.api_helpers.list_tracks")
 @mock.patch("ipod_sync.api_helpers.eject_ipod")

@@ -12,7 +12,12 @@ from .utils import mount_ipod, eject_ipod
 logger = logging.getLogger(__name__)
 
 
-def save_to_queue(name: str, data: bytes, queue_dir: Path | None = None) -> Path:
+def save_to_queue(
+    name: str,
+    data: bytes,
+    queue_dir: Path | None = None,
+    category: str | None = None,
+) -> Path:
     """Save uploaded file data to the sync queue directory.
 
     Parameters
@@ -24,6 +29,10 @@ def save_to_queue(name: str, data: bytes, queue_dir: Path | None = None) -> Path
     queue_dir:
         Destination directory for queued files. Defaults to
         :data:`~ipod_sync.config.SYNC_QUEUE_DIR`.
+    category:
+        Optional subdirectory for categorizing uploads (e.g. ``"music"`` or
+        ``"audiobook"``). If provided the file will be written inside this
+        subfolder.
 
     Returns
     -------
@@ -31,6 +40,8 @@ def save_to_queue(name: str, data: bytes, queue_dir: Path | None = None) -> Path
         The path to the written file.
     """
     queue = Path(queue_dir) if queue_dir else Path(config.SYNC_QUEUE_DIR)
+    if category:
+        queue = queue / category
     queue.mkdir(parents=True, exist_ok=True)
     dest = queue / name
     with dest.open("wb") as fh:
