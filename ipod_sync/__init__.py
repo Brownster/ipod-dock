@@ -12,6 +12,7 @@ __all__ = [
     "podcast_fetcher",
     "converter",
     "logging_setup",
+    "aap_controller",
     "templates",
 ]
 
