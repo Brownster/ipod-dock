@@ -48,3 +48,5 @@ python -m ipod_sync.app
 ```
 
 See [docs/development.md](docs/development.md) for the list of endpoints.
+Plugin developers can find usage examples in
+[docs/plugin_api.md](docs/plugin_api.md).
