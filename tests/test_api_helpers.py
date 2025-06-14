@@ -38,3 +38,27 @@ def test_remove_track_calls_lib(mock_mount, mock_eject, mock_delete):
     mock_mount.assert_called_once_with("/dev/ipod")
     mock_delete.assert_called_once_with("42")
     mock_eject.assert_called_once()
+
+
+def test_list_and_clear_queue(tmp_path):
+    file1 = tmp_path / "a.mp3"
+    file1.write_bytes(b"1")
+    file2 = tmp_path / "b.mp3"
+    file2.write_bytes(b"2")
+
+    files = api_helpers.list_queue(tmp_path)
+    assert {f["name"] for f in files} == {"a.mp3", "b.mp3"}
+
+    api_helpers.clear_queue(tmp_path)
+    assert not any(tmp_path.iterdir())
+
+
+@mock.patch("ipod_sync.api_helpers.get_tracks", return_value=[{"id": "1"}])
+@mock.patch("ipod_sync.api_helpers.list_queue", return_value=[{"name": "f"}])
+def test_get_stats_uses_shutil(mock_queue, mock_tracks, tmp_path):
+    with mock.patch("shutil.disk_usage") as du:
+        du.return_value = mock.Mock(total=100, used=25)
+        stats = api_helpers.get_stats("/dev/ipod", tmp_path)
+    assert stats["music"] == 1
+    assert stats["queue"] == 1
+    assert stats["storage_used"] == 25

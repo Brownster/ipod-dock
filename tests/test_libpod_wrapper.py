@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from unittest import mock
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -93,3 +94,29 @@ def test_list_tracks_returns_metadata(tmp_path):
         tracks = wrapper.list_tracks()
         assert tracks == [{"id": "42", "title": "Test", "artist": "Artist", "album": "Album"}]
         assert fake.db.closed
+
+
+def test_add_track_missing_file(tmp_path):
+    fake = FakeGpod()
+    mount = tmp_path / "mnt"
+    mount.mkdir()
+    with mock.patch.object(wrapper, "gpod", fake), \
+         mock.patch.object(wrapper, "IPOD_MOUNT", mount):
+        with pytest.raises(FileNotFoundError):
+            wrapper.add_track(tmp_path / "missing.mp3")
+
+
+def test_error_if_bindings_missing(tmp_path):
+    with mock.patch.object(wrapper, "gpod", None):
+        with pytest.raises(RuntimeError):
+            wrapper.list_tracks()
+
+
+def test_delete_track_not_found(tmp_path):
+    fake = FakeGpod()
+    mount = tmp_path / "mnt"
+    mount.mkdir()
+    with mock.patch.object(wrapper, "gpod", fake), \
+         mock.patch.object(wrapper, "IPOD_MOUNT", mount):
+        with pytest.raises(KeyError):
+            wrapper.delete_track("99")
