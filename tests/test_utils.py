@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from unittest import mock
 import subprocess
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -43,3 +44,10 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                 ], check=True, capture_output=True, text=True),
             ]
         )
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
+def test_run_raises_on_error(mock_run):
+    mock_run.side_effect = subprocess.CalledProcessError(1, ["cmd"], "", "fail")
+    with pytest.raises(RuntimeError):
+        utils._run(["cmd"])

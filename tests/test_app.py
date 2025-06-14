@@ -49,6 +49,14 @@ def test_tracks_endpoint(mock_get):
     mock_get.assert_called_once()
 
 
+@mock.patch.object(app_module, "get_tracks", side_effect=RuntimeError("boom"))
+def test_tracks_endpoint_error(mock_get):
+    response = client.get("/tracks")
+    assert response.status_code == 500
+    assert "boom" in response.text
+    mock_get.assert_called_once()
+
+
 @mock.patch.object(app_module, "remove_track")
 def test_delete_track_endpoint(mock_remove):
     response = client.delete("/tracks/42")
