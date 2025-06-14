@@ -37,3 +37,14 @@ iPod and removed from the queue.
 Log output is written to `logs/ipod_sync.log` and rotated automatically. See
 `docs/development.md` for developer notes on the logging configuration.
 
+
+## Web API
+
+A small FastAPI application exposes upload and track management endpoints. Start
+the server for development with:
+
+```bash
+python -m ipod_sync.app
+```
+
+See [docs/development.md](docs/development.md) for the list of endpoints.
