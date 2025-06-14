@@ -6,6 +6,7 @@ async function initializeApp() {
     await loadTracks();
     await updateStats();
     setupEventListeners();
+    updateUploadPrompt();
 }
 
 function setupEventListeners() {
@@ -19,6 +20,18 @@ function setupEventListeners() {
     uploadArea.addEventListener('drop', handleDrop);
     fileInput.addEventListener('change', handleFileSelect);
     searchInput.addEventListener('input', handleSearch);
+}
+
+function updateUploadPrompt() {
+    const uploadText = document.getElementById('upload-message');
+    if (!uploadText) return;
+    if (currentTab === 'audiobooks') {
+        uploadText.innerHTML = '<strong>Drop audiobook files here</strong><br>or click to browse';
+    } else if (currentTab === 'music') {
+        uploadText.innerHTML = '<strong>Drop music files here</strong><br>or click to browse';
+    } else {
+        uploadText.innerHTML = '<strong>Drop files here</strong><br>or click to browse';
+    }
 }
 
 function handleDragOver(e) {
@@ -71,6 +84,7 @@ function switchTab(tab, element) {
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     element.classList.add('active');
+    updateUploadPrompt();
     loadTracks();
 }
 
