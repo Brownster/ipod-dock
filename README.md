@@ -6,6 +6,23 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
 
 ![Screenshot_20250614_170158](https://github.com/user-attachments/assets/f6405a25-d809-4ad6-ba63-4b399a248f20)
 
+## Features
+
+- **Queue based syncing** – drop files into `sync_queue/` and they are copied to
+  the iPod on the next sync run.
+- **Automatic conversion** – unsupported formats are converted to MP3 with
+  `ffmpeg` before import.
+- **FastAPI web API** providing upload, track management and statistics
+  endpoints.
+- **HTML dashboard** served by the API for manual uploads and browsing the
+  library.
+- **Watcher daemon** using `watchdog` to trigger syncing when new files appear in
+  the queue.
+- **Serial playback control** via the Apple Accessory Protocol for play/pause and
+  track skipping.
+- **Rotating log files** stored under `logs/` for easy debugging.
+- **Systemd service units** so the API and watcher start automatically on boot.
+
 ## Setup
 
 A helper script `install.sh` automates dependency installation and sets up the
@@ -72,3 +89,6 @@ Plugin developers can find usage examples in
 ## Continuous Integration
 
 Unit tests run automatically on GitHub Actions for every push and pull request. The workflow installs the required Python packages from `requirements.txt` and executes `pytest`.
+
+For a more detailed overview of the repository layout and development workflow
+see [docs/developer_guide.md](docs/developer_guide.md).
