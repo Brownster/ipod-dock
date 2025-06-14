@@ -6,7 +6,15 @@ See [research.md](research.md) for notes on the hardware setup and [roadmap.md](
 
 ## Setup
 
-Install the required system packages (on Raspberry Pi OS):
+A helper script `install.sh` automates dependency installation and sets up the
+systemd service units. Run it from the project root:
+
+```bash
+./install.sh
+```
+
+If you prefer to perform the steps manually, install the required system
+packages (on Raspberry Pi OS):
 
 ```bash
 sudo apt-get update
