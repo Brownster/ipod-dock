@@ -15,6 +15,7 @@ from pathlib import Path
 from . import config
 from .logging_setup import setup_logging
 from .libpod_wrapper import add_track
+from . import converter
 from .utils import mount_ipod, eject_ipod
 
 logger = logging.getLogger(__name__)
@@ -41,13 +42,19 @@ def sync_queue(device: str = config.IPOD_DEVICE) -> None:
     try:
         for file in files:
             try:
-                track_id = add_track(file)
-                size = file.stat().st_size
+                to_sync = converter.prepare_for_sync(file)
+                track_id = add_track(to_sync)
+                size = to_sync.stat().st_size
                 logger.info(
-                    "Synced %s (%d bytes) track_id=%s", file.name, size, track_id
+                    "Synced %s (%d bytes) track_id=%s",
+                    to_sync.name,
+                    size,
+                    track_id,
                 )
                 if not config.KEEP_LOCAL_COPY:
-                    file.unlink()
+                    file.unlink(missing_ok=True)
+                    if to_sync != file:
+                        to_sync.unlink(missing_ok=True)
                     logger.debug("Deleted %s", file)
             except Exception as exc:  # pragma: no cover - unexpected failures
                 logger.error("Failed to sync %s: %s", file, exc)
