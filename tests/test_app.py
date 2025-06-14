@@ -164,3 +164,16 @@ def test_index_page():
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "<title>iPod Dock</title>" in response.text
+
+@mock.patch.object(app_module, "playback_controller")
+def test_control_endpoint(mock_ctl):
+    response = client.post("/control/play")
+    assert response.status_code == 200
+    mock_ctl.play_pause.assert_called_once()
+
+@mock.patch.object(app_module, "playback_controller")
+def test_control_invalid(mock_ctl):
+    response = client.post("/control/boom")
+    assert response.status_code == 400
+    mock_ctl.play_pause.assert_not_called()
+

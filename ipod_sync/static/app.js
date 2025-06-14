@@ -249,7 +249,7 @@ async function clearQueue() {
 }
 
 function playTrack(id) {
-    showNotification('Play functionality is not implemented', 'error');
+    sendControl('play');
 }
 
 async function removeTrack(id) {
@@ -257,6 +257,11 @@ async function removeTrack(id) {
     showNotification('Track removed', 'success');
     await loadTracks();
     await updateStats();
+}
+
+
+async function sendControl(cmd) {
+    await fetch('/control/' + cmd, { method: 'POST' });
 }
 
 function showNotification(message, type = 'success') {

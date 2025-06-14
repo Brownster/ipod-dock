@@ -5,3 +5,4 @@ httpx
 python-multipart
 feedparser
 pytest
+pyserial

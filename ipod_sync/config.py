@@ -34,3 +34,7 @@ SUPPORTED_FORMATS = {
     ".alac",
 }
 
+
+# Serial port used for playback control
+PLAYBACK_SERIAL_PORT = os.getenv("IPOD_SERIAL_PORT", "/dev/serial0")
+PLAYBACK_BAUDRATE = int(os.getenv("IPOD_SERIAL_BAUD", "19200"))
