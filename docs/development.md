@@ -61,3 +61,10 @@ python -m ipod_sync.sync_from_queue --device /dev/sda1
 
 The `--device` argument may be omitted if your iPod is available at the default
 path configured in `config.IPOD_DEVICE`.
+
+## Logging
+
+The project writes application logs to `logs/ipod_sync.log`.  Logging is
+configured by `ipod_sync.logging_setup.setup_logging()` which installs a
+`RotatingFileHandler` keeping up to three 1 MB log files.  Unit tests use this
+helper to create temporary log files.

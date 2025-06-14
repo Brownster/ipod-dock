@@ -13,6 +13,7 @@ import logging
 from pathlib import Path
 
 from . import config
+from .logging_setup import setup_logging
 from .libpod_wrapper import add_track
 from .utils import mount_ipod, eject_ipod
 
@@ -67,5 +68,5 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
     main()

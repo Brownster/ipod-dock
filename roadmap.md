@@ -6,7 +6,7 @@ Phase 1 – MVP: Manual Upload & Sync
 1.4     Implement mount helpers (utils.py) – mount_ipod(), eject_ipod(), using subprocess to call mount/umount/eject.   ☑
 1.5     Write libgpod wrapper (libpod_wrapper.py) – functions: add_track(filepath), delete_track(db_id), list_tracks(). ☑
 1.6     Implement simple sync script (sync_from_queue.py) – watches sync_queue/, mounts iPod, calls add_track(), ejects.        ☑
-1.7	Add logging – log to logs/ipod_sync.log with rotation.	☐
+1.7	Add logging – log to logs/ipod_sync.log with rotation.	☑
 1.8	Test end-to-end – copy an MP3 to sync_queue/, run script, verify track appears on iPod after eject.	☐
 Phase 2 – Basic API & Web UI
 #	Task	

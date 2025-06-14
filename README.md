@@ -34,3 +34,6 @@ python -m ipod_sync.sync_from_queue --device /dev/sda1
 Any audio files placed in the `sync_queue/` directory will be imported to the
 iPod and removed from the queue.
 
+Log output is written to `logs/ipod_sync.log` and rotated automatically. See
+`docs/development.md` for developer notes on the logging configuration.
+
