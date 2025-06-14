@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# macOS
+.DS_Store
+
+# Log and temporary directories
+logs/
+uploads/
+sync_queue/
