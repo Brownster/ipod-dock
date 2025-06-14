@@ -68,3 +68,22 @@ The project writes application logs to `logs/ipod_sync.log`.  Logging is
 configured by `ipod_sync.logging_setup.setup_logging()` which installs a
 `RotatingFileHandler` keeping up to three 1 MB log files.  Unit tests use this
 helper to create temporary log files.
+
+## Web API
+
+The `ipod_sync.app` module exposes a small FastAPI application. Run a local
+server with:
+
+```bash
+python -m ipod_sync.app
+```
+
+Endpoints:
+
+- `GET /status` – simple health check returning `{"status": "ok"}`.
+- `POST /upload` – upload a file; it is saved to `sync_queue/` for later sync.
+- `GET /tracks` – list tracks on the iPod. The iPod is mounted automatically.
+- `DELETE /tracks/{id}` – remove a track by its database ID. The iPod is mounted
+  and ejected for the operation.
+
+The API uses the same rotating log configuration as the sync script.

@@ -10,10 +10,10 @@ Phase 1 – MVP: Manual Upload & Sync
 1.8	Test end-to-end – copy an MP3 to sync_queue/, run script, verify track appears on iPod after eject.	☐
 Phase 2 – Basic API & Web UI
 #	Task	
-2.1	Add Flask/FastAPI – scaffold app.py with /status (health) endpoint.	☐
-2.2	POST /upload endpoint – accept file upload, save to sync_queue/, return JSON.	☐
-2.3	GET /tracks endpoint – return JSON list from list_tracks().	☐
-2.4	DELETE /tracks/<id> endpoint – remove a track, re-write DB, eject.	☐
+2.1	Add Flask/FastAPI – scaffold app.py with /status (health) endpoint. ☑
+2.2	POST /upload endpoint – accept file upload, save to sync_queue/, return JSON. ☑
+2.3	GET /tracks endpoint – return JSON list from list_tracks(). ☑
+2.4	DELETE /tracks/<id> endpoint – remove a track, re-write DB, eject. ☑
 2.5	Add simple HTML UI – use Bootstrap/Tailwind, fetch /tracks, show table, upload form.	☐
 2.6	Systemd service – create unit file for API + sync watcher so they start on boot.	☐
 Phase 3 – Dock Detection & Playback Control
