@@ -7,7 +7,7 @@ Type=simple
 WorkingDirectory=/path/to/ipod-dock
 ExecStart=/usr/bin/python3 -m ipod_sync.app
 Restart=on-failure
-User=pi
+User=ipod
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
