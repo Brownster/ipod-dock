@@ -7,7 +7,7 @@ Type=simple
 ExecStart=/usr/bin/python3 -m ipod_sync.watcher
 WorkingDirectory=/path/to/ipod-dock
 Restart=on-failure
-User=pi
+User=ipod
 Environment=PYTHONUNBUFFERED=1
 
 [Install]

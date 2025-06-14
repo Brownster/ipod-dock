@@ -15,6 +15,13 @@ systemd service units. Run it from the project root:
 ./install.sh
 ```
 
+The installer creates a dedicated `ipod` user and installs the unit files under
+`/etc/systemd/system`. Start the services with:
+
+```bash
+sudo systemctl start ipod-api.service ipod-watcher.service
+```
+
 If you prefer to perform the steps manually, install the required system
 packages (on Raspberry Pi OS):
 
