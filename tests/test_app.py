@@ -48,3 +48,9 @@ def test_delete_track_not_found(mock_remove):
     response = client.delete("/tracks/99")
     assert response.status_code == 404
     mock_remove.assert_called_once_with("99", app_module.config.IPOD_DEVICE)
+
+def test_index_page():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "<title>iPod Dock</title>" in response.text
