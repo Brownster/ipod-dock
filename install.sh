@@ -7,7 +7,7 @@ SERVICE_USER="ipod"
 
 build_libgpod() {
     echo "Building libgpod from source..."
-    sudo apt-get install -y build-essential git libtool intltool \
+    sudo apt-get install -y build-essential git libtool intltool gtk-doc-tools \
         autoconf automake \
         libglib2.0-dev libimobiledevice-dev libplist-dev python3-dev
     workdir=$(mktemp -d)
