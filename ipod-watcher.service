@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 -m ipod_sync.watcher
-WorkingDirectory=/path/to/ipod-dock
+WorkingDirectory=%h
 Restart=on-failure
 User=ipod
 Environment=PYTHONUNBUFFERED=1
