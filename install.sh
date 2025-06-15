@@ -12,22 +12,15 @@ build_libgpod() {
         libglib2.0-dev libimobiledevice-dev libplist-dev libxml2-dev \
         python3-dev libsqlite3-dev
     workdir=$(mktemp -d)
-    git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
+    git clone --depth 1 https://github.com/john8675309/libgpod-0.8.3.git "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
-    # Apply patches for newer GLib and compiler warnings
-    sed -i 's/g_memdup (/g_memdup2 (/g' src/db-artwork-parser.c
-    sed -i 's/^\(GList \*\)artwork_glist = NULL;/GList **artwork_list = NULL;/' src/db-artwork-parser.c
-    sed -i '/ctx->db->db_type == DB_TYPE_ITUNES)/,/ctx->artwork =/s/ctx->artwork = &artwork_glist;/artwork_list = g_new0 (GList *, 1);\n            ctx->artwork = artwork_list;/' src/db-artwork-parser.c
-    sed -i '/g_list_free (*ctx->artwork);/a\    g_free (ctx->artwork);' src/db-artwork-parser.c
     export AUTOMAKE=automake
     export ACLOCAL=aclocal
     pcdir=$(pkg-config --variable=pcfiledir libplist-2.0 2>/dev/null || true)
     if [ -n "$pcdir" ] && [ ! -e "$pcdir/libplist.pc" ] && [ -e "$pcdir/libplist-2.0.pc" ]; then
         sudo ln -s "$pcdir/libplist-2.0.pc" "$pcdir/libplist.pc"
     fi
-    autoreconf -fvi
-    CFLAGS="-Wno-error=deprecated-declarations -Wno-error=dangling-pointer" \
-        ./configure --with-python3
+    ./configure --with-python=/usr/bin/python3
     make
     sudo make install
     sudo ldconfig
