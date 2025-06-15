@@ -52,12 +52,14 @@ pip install -r "$PROJECT_DIR/requirements.txt"
 if ! id "$SERVICE_USER" >/dev/null 2>&1; then
     sudo useradd -r -s /usr/sbin/nologin -d "$PROJECT_DIR" "$SERVICE_USER"
 fi
+# Ensure service user can access the project directory
+sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$PROJECT_DIR"
 
 # Install systemd services if available
 if command -v systemctl >/dev/null; then
     for svc in ipod-api.service ipod-watcher.service; do
         tmp=$(mktemp)
-        sed "s|/path/to/ipod-dock|$PROJECT_DIR|; s|User=.*|User=$SERVICE_USER|" "$PROJECT_DIR/$svc" > "$tmp"
+        sed "s|User=.*|User=$SERVICE_USER|" "$PROJECT_DIR/$svc" > "$tmp"
         sudo mv "$tmp" "/etc/systemd/system/$svc"
     done
     sudo systemctl daemon-reload

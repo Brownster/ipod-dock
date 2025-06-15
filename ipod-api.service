@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/to/ipod-dock
+WorkingDirectory=%h
 ExecStart=/usr/bin/python3 -m ipod_sync.app
 Restart=on-failure
 User=ipod
