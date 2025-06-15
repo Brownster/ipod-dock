@@ -8,6 +8,7 @@ SERVICE_USER="ipod"
 build_libgpod() {
     echo "Building libgpod from source..."
     sudo apt-get install -y build-essential git libtool intltool \
+        autoconf automake \
         libglib2.0-dev libimobiledevice-dev libplist-dev python3-dev
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
