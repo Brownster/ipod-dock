@@ -56,10 +56,11 @@ sudo apt-get install libgpod-common ffmpeg
 
 If your distribution does not provide the `python3-gpod` package, running
 `install.sh` will build the libgpod bindings from source. This requires the
-SQLite development headers which can be installed with:
+SQLite development headers and libxml2 development files which can be installed
+with:
 
 ```bash
-sudo apt-get install libsqlite3-dev
+sudo apt-get install libsqlite3-dev libxml2-dev
 ```
 
 The script also installs other build tools such as `automake`.

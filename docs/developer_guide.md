@@ -28,7 +28,8 @@ sudo apt-get install libgpod-common ffmpeg
 
 If the `python3-gpod` package is missing, run `../install.sh` to build the
 libgpod bindings from source. The build requires the SQLite development headers
-(`libsqlite3-dev`) and installs other tools like `automake`.
+(`libsqlite3-dev`) and the libxml2 development package (`libxml2-dev`). The
+script also installs other tools like `automake`.
 
 ## Running the services
 
