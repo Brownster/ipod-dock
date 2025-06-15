@@ -13,10 +13,12 @@ build_libgpod() {
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
+    export AUTOMAKE=automake
     ./autogen.sh
     ./configure --with-python3
     make
     sudo make install
+    sudo ldconfig
     popd >/dev/null
     rm -rf "$workdir"
 }
@@ -38,7 +40,8 @@ fi
 source "$PROJECT_DIR/.venv/bin/activate"
 
 # Install Python packages
-pip install -U pip fastapi uvicorn watchdog httpx python-multipart
+pip install -U pip
+pip install -r "$PROJECT_DIR/requirements.txt"
 
 # Ensure dedicated service user exists
 if ! id "$SERVICE_USER" >/dev/null 2>&1; then
