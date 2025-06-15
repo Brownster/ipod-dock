@@ -54,7 +54,7 @@ sudo apt-get update
 sudo apt-get install libgpod-common ffmpeg
 ```
 
-If your distribution does not provide the `python3-gpod` package, running
+Sadly debain distro bookworm does not provide the `python3-gpod` package, running
 `install.sh` will build the libgpod bindings from a maintained fork
 ([`john8675309/libgpod-0.8.3`](https://github.com/john8675309/libgpod-0.8.3))
 with Python 3 support. This requires the SQLite development headers and libxml2
