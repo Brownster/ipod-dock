@@ -32,8 +32,9 @@ systemd service units. Run it from the project root:
 ./install.sh
 ```
 
-The installer creates a dedicated `ipod` user and installs the unit files under
-`/etc/systemd/system`. Start the services with:
+The installer creates a dedicated `ipod` user, installs the unit files under
+`/etc/systemd/system` and sets up a Python virtual environment in `.venv` with
+all packages from `requirements.txt`. Start the services with:
 
 ```bash
 sudo systemctl start ipod-api.service ipod-watcher.service
@@ -56,6 +57,7 @@ Create a Python virtual environment in the project root:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 This repository will use the virtual environment for any Python tools and future dependencies.
