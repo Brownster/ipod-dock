@@ -14,7 +14,12 @@ build_libgpod() {
     git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
     export AUTOMAKE=automake
-    ./autogen.sh
+    export ACLOCAL=aclocal
+    pcdir=$(pkg-config --variable=pcfiledir libplist-2.0 2>/dev/null || true)
+    if [ -n "$pcdir" ] && [ ! -e "$pcdir/libplist.pc" ] && [ -e "$pcdir/libplist-2.0.pc" ]; then
+        sudo ln -s "$pcdir/libplist-2.0.pc" "$pcdir/libplist.pc"
+    fi
+    autoreconf -fvi
     ./configure --with-python3
     make
     sudo make install
