@@ -27,6 +27,7 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
 
 To run this (still in testing)
 ```bash
+sudo apt install git
 git clone https://github.com/Brownster/ipod-dock.git
 cd ipod-dock
 ```
