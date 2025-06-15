@@ -25,6 +25,12 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
 
 ## Setup
 
+To run this (still in testing)
+```bash
+git clone https://github.com/Brownster/ipod-dock.git
+cd ipod-dock
+```
+
 A helper script `install.sh` automates dependency installation and sets up the
 systemd service units. Run it from the project root:
 
