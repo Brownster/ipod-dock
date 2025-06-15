@@ -44,8 +44,11 @@ packages (on Raspberry Pi OS):
 
 ```bash
 sudo apt-get update
-sudo apt-get install python3-gpod libgpod-common ffmpeg
+sudo apt-get install libgpod-common ffmpeg
 ```
+
+If your distribution does not provide the `python3-gpod` package, running
+`install.sh` will automatically build the libgpod bindings from source.
 
 Create a Python virtual environment in the project root:
 

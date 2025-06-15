@@ -34,8 +34,11 @@ environment, so the unit tests mock them out.  On a Debian based system you can
 install them via:
 
 ```bash
-sudo apt-get install python3-gpod libgpod-common
+sudo apt-get install libgpod-common
 ```
+
+If `python3-gpod` isn't packaged on your system, the `install.sh` script will
+download and build the bindings automatically.
 
 The module exposes three simple helpers:
 

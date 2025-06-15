@@ -23,8 +23,11 @@ pip install -r requirements.txt
 System packages for the iPod bindings and `ffmpeg` can be installed on Debian based systems with:
 
 ```bash
-sudo apt-get install python3-gpod libgpod-common ffmpeg
+sudo apt-get install libgpod-common ffmpeg
 ```
+
+If the `python3-gpod` package is missing, run `../install.sh` which will
+compile the libgpod bindings automatically.
 
 ## Running the services
 
