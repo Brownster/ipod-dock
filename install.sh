@@ -3,7 +3,17 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TARGET_DIR="/opt/ipod-dock"
 SERVICE_USER="ipod"
+
+# Ensure the project resides in a path accessible to the service user
+if [ "$PROJECT_DIR" != "$TARGET_DIR" ]; then
+    echo "Copying project to $TARGET_DIR..."
+    sudo mkdir -p "$TARGET_DIR"
+    sudo rsync -a --exclude '.venv' "$PROJECT_DIR/" "$TARGET_DIR/"
+    PROJECT_DIR="$TARGET_DIR"
+fi
+cd "$PROJECT_DIR"
 
 build_libgpod() {
     echo "Building libgpod from source..."
@@ -49,7 +59,10 @@ pip install -U pip
 pip install -r "$PROJECT_DIR/requirements.txt"
 
 # Ensure dedicated service user exists
-if ! id "$SERVICE_USER" >/dev/null 2>&1; then
+# Create or update the service user
+if id "$SERVICE_USER" >/dev/null 2>&1; then
+    sudo usermod -d "$PROJECT_DIR" "$SERVICE_USER"
+else
     sudo useradd -r -s /usr/sbin/nologin -d "$PROJECT_DIR" "$SERVICE_USER"
 fi
 # Ensure service user can access the project directory
