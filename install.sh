@@ -9,7 +9,8 @@ build_libgpod() {
     echo "Building libgpod from source..."
     sudo apt-get install -y build-essential git libtool intltool gtk-doc-tools \
         autoconf automake \
-        libglib2.0-dev libimobiledevice-dev libplist-dev python3-dev
+        libglib2.0-dev libimobiledevice-dev libplist-dev python3-dev \
+        libsqlite3-dev
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null

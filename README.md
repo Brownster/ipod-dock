@@ -49,8 +49,14 @@ sudo apt-get install libgpod-common ffmpeg
 ```
 
 If your distribution does not provide the `python3-gpod` package, running
-`install.sh` will automatically build the libgpod bindings from source and
-install build tools such as `automake`.
+`install.sh` will build the libgpod bindings from source. This requires the
+SQLite development headers which can be installed with:
+
+```bash
+sudo apt-get install libsqlite3-dev
+```
+
+The script also installs other build tools such as `automake`.
 
 Create a Python virtual environment in the project root:
 
