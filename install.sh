@@ -5,10 +5,29 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_USER="ipod"
 
+build_libgpod() {
+    echo "Building libgpod from source..."
+    sudo apt-get install -y build-essential git libtool intltool \
+        libglib2.0-dev libimobiledevice-dev libplist-dev python3-dev
+    workdir=$(mktemp -d)
+    git clone --depth 1 https://github.com/fadingred/libgpod "$workdir/libgpod"
+    pushd "$workdir/libgpod" >/dev/null
+    ./autogen.sh
+    ./configure --with-python3
+    make
+    sudo make install
+    popd >/dev/null
+    rm -rf "$workdir"
+}
+
 # Install system packages
 if command -v apt-get >/dev/null; then
     sudo apt-get update
-    sudo apt-get install -y python3-gpod libgpod-common ffmpeg python3-venv
+    if ! sudo apt-get install -y python3-gpod libgpod-common ffmpeg python3-venv; then
+        echo "python3-gpod not available, building from source" >&2
+        sudo apt-get install -y libgpod-common ffmpeg python3-venv
+        build_libgpod
+    fi
 fi
 
 # Create virtual environment
