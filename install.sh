@@ -20,8 +20,7 @@ build_libgpod() {
     if [ -n "$pcdir" ] && [ ! -e "$pcdir/libplist.pc" ] && [ -e "$pcdir/libplist-2.0.pc" ]; then
         sudo ln -s "$pcdir/libplist-2.0.pc" "$pcdir/libplist.pc"
     fi
-    ./autogen.sh
-    ./configure --with-python3
+    ./configure --with-python=/usr/bin/python3
     make
     sudo make install
     sudo ldconfig
