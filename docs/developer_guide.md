@@ -27,7 +27,7 @@ sudo apt-get install libgpod-common ffmpeg
 ```
 
 If the `python3-gpod` package is missing, run `../install.sh` which will
-compile the libgpod bindings automatically.
+compile the libgpod bindings automatically and install tools like `automake`.
 
 ## Running the services
 

@@ -38,7 +38,8 @@ sudo apt-get install libgpod-common
 ```
 
 If `python3-gpod` isn't packaged on your system, the `install.sh` script will
-download and build the bindings automatically.
+download and build the bindings automatically and install required build tools
+such as `automake`.
 
 The module exposes three simple helpers:
 

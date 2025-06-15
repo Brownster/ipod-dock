@@ -48,7 +48,8 @@ sudo apt-get install libgpod-common ffmpeg
 ```
 
 If your distribution does not provide the `python3-gpod` package, running
-`install.sh` will automatically build the libgpod bindings from source.
+`install.sh` will automatically build the libgpod bindings from source and
+install build tools such as `automake`.
 
 Create a Python virtual environment in the project root:
 
