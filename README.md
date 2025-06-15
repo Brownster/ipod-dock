@@ -46,6 +46,10 @@ all packages from `requirements.txt`. Start the services with:
 sudo systemctl start ipod-api.service ipod-watcher.service
 ```
 
+Once `ipod-api.service` is running you can open the web dashboard in a browser.
+On the Pi itself visit `http://localhost:8000/`; from another machine replace
+`localhost` with the Pi's address.
+
 If you prefer to perform the steps manually, install the required system
 packages (on Raspberry Pi OS):
 
@@ -101,6 +105,9 @@ the server for development with:
 ```bash
 python -m ipod_sync.app
 ```
+
+With the server running, navigate to `http://localhost:8000/` (or use the Pi's
+address) to use the HTML dashboard for uploads and track browsing.
 
 See [docs/development.md](docs/development.md) for the list of endpoints.
 Plugin developers can find usage examples in
