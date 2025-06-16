@@ -18,7 +18,7 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
     with mock.patch.object(utils, "IPOD_MOUNT", mount_point):
         utils.mount_ipod(device)
         mock_run.assert_called_with(
-            ["mount", device, str(mount_point)],
+            ["mount", str(mount_point)],
             check=True,
             capture_output=True,
             text=True,
