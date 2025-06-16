@@ -233,12 +233,20 @@ async function syncNow() {
 
     statusIndicator.className = 'status-indicator status-syncing';
     statusText.textContent = 'Syncing...';
-    await fetch('/sync', { method: 'POST' });
-    await updateStats();
-    statusIndicator.className = 'status-indicator status-connected';
-    statusText.textContent = 'iPod Connected';
-    document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
-    showNotification('Sync completed successfully!', 'success');
+    try {
+        const res = await fetch('/sync', { method: 'POST' });
+        if (!res.ok) throw new Error('Sync failed');
+        await updateStats();
+        statusIndicator.className = 'status-indicator status-connected';
+        statusText.textContent = 'iPod Connected';
+        document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
+        showNotification('Sync completed successfully!', 'success');
+    } catch (err) {
+        console.error(err);
+        statusIndicator.className = 'status-indicator status-error';
+        statusText.textContent = 'Sync failed';
+        showNotification('Sync failed', 'error');
+    }
 }
 
 async function clearQueue() {

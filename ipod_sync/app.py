@@ -134,7 +134,11 @@ async def queue_clear() -> dict:
 @app.post("/sync", dependencies=[auth_dep])
 async def sync() -> dict:
     """Trigger a sync of queued files."""
-    sync_from_queue.sync_queue(config.IPOD_DEVICE)
+    try:
+        sync_from_queue.sync_queue(config.IPOD_DEVICE)
+    except Exception as exc:  # pragma: no cover - runtime failures
+        logger.error("Sync failed: %s", exc)
+        raise HTTPException(500, str(exc))
     return {"synced": True}
 
 
@@ -158,26 +162,25 @@ async def podcasts_fetch(payload: dict) -> dict:
     return {"downloaded": [p.name for p in downloaded]}
 
 
-@app.post('/control/{cmd}', dependencies=[auth_dep])
+@app.post("/control/{cmd}", dependencies=[auth_dep])
 async def control(cmd: str) -> dict:
     try:
-        if cmd == 'play':
+        if cmd == "play":
             playback_controller.play_pause()
-        elif cmd == 'pause':
+        elif cmd == "pause":
             playback_controller.play_pause()
-        elif cmd == 'next':
+        elif cmd == "next":
             playback_controller.next_track()
-        elif cmd == 'prev':
+        elif cmd == "prev":
             playback_controller.prev_track()
         else:
-            raise HTTPException(400, 'invalid command')
+            raise HTTPException(400, "invalid command")
     except HTTPException as exc:
         raise exc
     except Exception as exc:  # pragma: no cover - runtime errors
-        logger.error('Playback command %s failed: %s', cmd, exc)
+        logger.error("Playback command %s failed: %s", cmd, exc)
         raise HTTPException(500, str(exc))
-    return {'status': 'ok'}
-
+    return {"status": "ok"}
 
 
 def main() -> None:
