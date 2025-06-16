@@ -45,8 +45,25 @@ path accessible to the `ipod` user. It creates or updates that user with
 and sets up a Python virtual environment with the dependencies. Ownership of the
 target directory is updated accordingly. Start the services with:
 
+
 ```bash
 sudo systemctl start ipod-api.service ipod-watcher.service
+```
+
+The services run under the dedicated `ipod` account. This user must have
+permission to mount the iPod's block device or the API will fail with a
+"must be superuser" error. `install.sh` creates the mount directory and adds an
+`/etc/fstab` entry so the `ipod` user can mount the device. If needed, adjust
+the device path in `/etc/fstab`; the default entry looks like:
+
+```
+/dev/sda1 /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
+```
+
+After updating `fstab` you can test with:
+
+```bash
+sudo -u ipod mount /opt/ipod-dock/mnt/ipod
 ```
 
 Once `ipod-api.service` is running you can open the web dashboard in a browser.
@@ -86,7 +103,8 @@ This repository will use the virtual environment for any Python tools and future
 ## Updating
 
 Run `./update.sh` from the same project directory used during installation to refresh the copy under `/opt/ipod-dock`.
-The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data.
+The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data. It also verifies the
+`/etc/fstab` entry for the iPod mount so existing installations get the correct permissions automatically.
 
 
 ## Syncing files
