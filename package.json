@@ -1,0 +1,8 @@
+{
+  "name": "ipod-dock",
+  "version": "1.0.0",
+  "description": "Dev dependencies for UI tests",
+  "devDependencies": {
+    "jsdom": "^22.1.0"
+  }
+}
