@@ -129,6 +129,15 @@ def test_sync_endpoint(mock_sync):
     mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
 
 
+@mock.patch.object(app_module, "sync_from_queue")
+def test_sync_endpoint_error(mock_sync):
+    mock_sync.sync_queue.side_effect = RuntimeError("boom")
+    response = client.post("/sync")
+    assert response.status_code == 500
+    assert "boom" in response.text
+    mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
+
+
 @mock.patch.object(app_module, "podcast_fetcher")
 def test_podcasts_fetch_endpoint(mock_fetcher):
     mock_fetcher.fetch_podcasts.return_value = [Path("sync_queue/podcast/ep.mp3")]
@@ -159,11 +168,13 @@ def test_stats_endpoint(mock_stats):
     assert response.json() == {"music": 1}
     mock_stats.assert_called_once_with(app_module.config.IPOD_DEVICE)
 
+
 def test_index_page():
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "<title>iPod Dock</title>" in response.text
+
 
 @mock.patch.object(app_module, "playback_controller")
 def test_control_endpoint(mock_ctl):
@@ -171,9 +182,9 @@ def test_control_endpoint(mock_ctl):
     assert response.status_code == 200
     mock_ctl.play_pause.assert_called_once()
 
+
 @mock.patch.object(app_module, "playback_controller")
 def test_control_invalid(mock_ctl):
     response = client.post("/control/boom")
     assert response.status_code == 400
     mock_ctl.play_pause.assert_not_called()
-
