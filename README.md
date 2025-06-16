@@ -83,6 +83,12 @@ pip install -r requirements.txt
 
 This repository will use the virtual environment for any Python tools and future dependencies.
 
+## Updating
+
+Run `./update.sh` from the same project directory used during installation to refresh the copy under `/opt/ipod-dock`.
+The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data.
+
+
 ## Syncing files
 
 During the early development phase queued files can be synced manually using the
