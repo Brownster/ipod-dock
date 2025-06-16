@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 -m ipod_sync.watcher
+ExecStart=/opt/ipod-dock/.venv/bin/python -m ipod_sync.watcher
 WorkingDirectory=/opt/ipod-dock
 Restart=on-failure
 User=ipod
