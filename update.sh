@@ -35,6 +35,16 @@ else
 fi
 sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$TARGET_DIR"
 
+# Ensure mount permissions are configured for the service user
+IPOD_DEVICE="/dev/sda1"
+MOUNT_POINT="$TARGET_DIR/mnt/ipod"
+sudo mkdir -p "$MOUNT_POINT"
+sudo chown "$SERVICE_USER":"$SERVICE_USER" "$MOUNT_POINT"
+if ! grep -qs "${MOUNT_POINT}" /etc/fstab; then
+    echo "Adding $IPOD_DEVICE mount entry to /etc/fstab..."
+    echo "$IPOD_DEVICE $MOUNT_POINT vfat noauto,user,uid=$SERVICE_USER,gid=$SERVICE_USER 0 0" | sudo tee -a /etc/fstab
+fi
+
 # Refresh systemd units and restart services
 if command -v systemctl >/dev/null; then
     for svc in ipod-api.service ipod-watcher.service; do
