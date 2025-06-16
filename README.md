@@ -39,6 +39,13 @@ systemd service units. Run it from the project root:
 ./install.sh
 ```
 
+Or of you prefer this will get the job done
+
+```bash
+sudo apt install git -y && sudo git clone https://github.com/Brownster/ipod-dock.git && cd ipod-dock && sudo ./install.sh
+```
+
+
 The installer copies the project to `/opt/ipod-dock` so the services run from a
 path accessible to the `ipod` user. It creates or updates that user with
 `/opt/ipod-dock` as its home, installs the unit files under `/etc/systemd/system`
