@@ -23,6 +23,22 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
 - **Rotating log files** stored under `logs/` for easy debugging.
 - **Systemd service units** so the API and watcher start automatically on boot.
 
+## Dock wiring
+
+The iPod's 30-pin connector carries USB and serial lines that can be wired
+directly to the Pi. For a basic connection:
+
+* **USB data** – connect pin 27 (D+) to the Pi's USB D+ and pin 25 (D-) to USB
+  D-. Wire pin 23 to the Pi's 5 V supply and pin 16 (or 15) to ground so the Pi
+  recognises the iPod as a normal USB device.
+* **Serial (optional)** – connect pin 12 (TX) and pin 13 (RX) to the Pi's UART
+  (GPIO14/15). Place a ~6.8 kΩ resistor between pin 21 and ground to enable
+  accessory mode for playback control.
+* **Audio** – pin 4 provides left line out, pin 3 right, with pin 2 as ground if
+  you want to feed speakers or an amplifier.
+
+See [docs/wiring.md](docs/wiring.md) for the full pin list.
+
 ## Setup
 
 To run this (still in testing)
