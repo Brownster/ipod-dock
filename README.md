@@ -20,6 +20,8 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
   library.
 - **Watcher daemon** using `watchdog` to trigger syncing when new files appear in
   the queue.
+- **USB listener** using `pyudev` to start syncing automatically when the iPod
+  is connected.
 - **Serial playback control** via the Apple Accessory Protocol for play/pause and
   track skipping.
 - **Rotating log files** stored under `logs/` for easy debugging.
@@ -72,7 +74,7 @@ target directory is updated accordingly. Start the services with:
 
 
 ```bash
-sudo systemctl start ipod-api.service ipod-watcher.service
+sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service
 ```
 
 The services run under the dedicated `ipod` account. This user must have
