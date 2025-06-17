@@ -14,6 +14,8 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
   `ffmpeg` before import.
 - **FastAPI web API** providing upload, track management and statistics
   endpoints.
+- **Connection status indicator** via the `/status` endpoint to show whether the
+  iPod is connected.
 - **HTML dashboard** served by the API for manual uploads and browsing the
   library.
 - **Watcher daemon** using `watchdog` to trigger syncing when new files appear in
@@ -158,6 +160,9 @@ python -m ipod_sync.app
 
 With the server running, navigate to `http://localhost:8000/` (or use the Pi's
 address) to use the HTML dashboard for uploads and track browsing.
+
+The `/status` endpoint now reports whether the configured iPod device is
+connected via a `connected` boolean field.
 
 See [docs/development.md](docs/development.md) for the list of endpoints.
 Plugin developers can find usage examples in

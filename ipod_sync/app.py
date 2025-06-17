@@ -22,6 +22,7 @@ from .api_helpers import (
     get_stats,
     get_playlists,
     create_new_playlist,
+    is_ipod_connected,
 )
 from . import sync_from_queue, podcast_fetcher
 
@@ -47,7 +48,8 @@ async def index() -> str:
 async def status() -> dict:
     """Return service health information."""
     logger.debug("Status check")
-    return {"status": "ok"}
+    connected = is_ipod_connected(config.IPOD_DEVICE)
+    return {"status": "ok", "connected": connected}
 
 
 @app.post("/upload", dependencies=[auth_dep])

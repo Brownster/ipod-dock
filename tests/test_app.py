@@ -12,14 +12,16 @@ import ipod_sync.app as app_module
 client = TestClient(app)
 
 
-def test_status_endpoint():
+def test_status_endpoint(monkeypatch):
+    monkeypatch.setattr(app_module, "is_ipod_connected", lambda *_: True)
     response = client.get("/status")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ok", "connected": True}
 
 
 def test_auth_required_when_key_set(monkeypatch):
     monkeypatch.setattr(app_module.config, "API_KEY", "secret")
+    monkeypatch.setattr(app_module, "is_ipod_connected", lambda *_: False)
     unauthorized = client.get("/status")
     assert unauthorized.status_code == 401
     ok = client.get("/status", headers={"X-API-Key": "secret"})

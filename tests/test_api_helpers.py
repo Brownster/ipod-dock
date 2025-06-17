@@ -64,6 +64,25 @@ def test_list_and_clear_queue(tmp_path):
     assert not any(tmp_path.iterdir())
 
 
+def test_is_ipod_connected_exists(tmp_path):
+    dev = tmp_path / "sda1"
+    dev.write_bytes(b"")
+    assert api_helpers.is_ipod_connected(str(dev))
+
+
+def test_is_ipod_connected_mounts(monkeypatch):
+    data = "/dev/foo /mnt/ipod vfat rw 0 0\n"
+    m = mock.mock_open(read_data=data)
+    monkeypatch.setattr("builtins.open", m)
+    assert api_helpers.is_ipod_connected("/dev/foo")
+
+
+def test_is_ipod_connected_false(monkeypatch):
+    m = mock.mock_open(read_data="/dev/bar /mnt xfs rw 0 0\n")
+    monkeypatch.setattr("builtins.open", m)
+    assert not api_helpers.is_ipod_connected("/dev/foo")
+
+
 @mock.patch("ipod_sync.api_helpers.get_tracks", return_value=[{"id": "1"}])
 @mock.patch("ipod_sync.api_helpers.list_queue", return_value=[{"name": "f"}])
 def test_get_stats_uses_shutil(mock_queue, mock_tracks, tmp_path):
