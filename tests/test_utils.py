@@ -23,7 +23,16 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))
         mock_run.assert_called_with(
-            ["sudo", "mount", "-t", "vfat", str(device), str(mount_point)],
+            [
+                "sudo",
+                "--non-interactive",
+                "--",
+                "mount",
+                "-t",
+                "vfat",
+                str(device),
+                str(mount_point),
+            ],
             check=True,
             capture_output=True,
             text=True,
@@ -48,7 +57,16 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
         utils.mount_ipod(utils.IPOD_DEVICE)
         wfl.assert_called_once()
         mock_run.assert_called_with(
-            ["sudo", "mount", "-t", "vfat", str(device), str(mount_point)],
+            [
+                "sudo",
+                "--non-interactive",
+                "--",
+                "mount",
+                "-t",
+                "vfat",
+                str(device),
+                str(mount_point),
+            ],
             check=True,
             capture_output=True,
             text=True,
@@ -70,6 +88,8 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                 mock.call(
                     [
                         "sudo",
+                        "--non-interactive",
+                        "--",
                         "umount",
                         str(mount_point),
                     ],
@@ -80,6 +100,8 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                 mock.call(
                     [
                         "sudo",
+                        "--non-interactive",
+                        "--",
                         "eject",
                         str(mount_point),
                     ],
@@ -95,7 +117,7 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
 @mock.patch("ipod_sync.utils.subprocess.run")
 def test_run_raises_on_error(mock_run):
     mock_run.side_effect = subprocess.CalledProcessError(1, ["cmd"], "", "fail")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(subprocess.CalledProcessError):
         utils._run(["cmd"])
 
 
@@ -105,10 +127,8 @@ def test_run_uses_sudo_when_requested(mock_run):
     with mock.patch("os.geteuid", return_value=1000):
         utils._run(["echo", "hi"], use_sudo=True)
     mock_run.assert_called_with(
-        ["sudo", "echo", "hi"],
+        ["sudo", "--non-interactive", "--", "echo", "hi"],
         check=True,
-        capture_output=True,
-        text=True,
     )
 
 
