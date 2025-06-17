@@ -1,5 +1,9 @@
 Integrating an iPod Classic with a Raspberry Pi Zero 2 W for Wireless Syncing
 
+The project targets the Pi Zero 2 W for its small size and low power draw. A
+Pi 3A+ is a compatible alternative if you want a faster CPU and a full‑size USB
+port.
+
 System Overview:
 
 Figure: High-level flow of the wireless syncing system. An AudioBookShelf plugin sends files over Wi-Fi to the Raspberry Pi, which then syncs them to the docked iPod Classic via USB.
@@ -223,7 +227,7 @@ Additional Tips and Example Setup
 
     Testing: Before setting up wireless transfers, test that the Pi can see and sync the iPod wired. Plug the iPod into Pi’s USB (perhaps using a micro USB OTG cable). The iPod should start charging (it will likely beep and show “Do not disconnect”). On the Pi, dmesg should show a new USB device (e.g., “sda” attached). Install gtkpod or gnupod and try adding a song manually to verify the pipeline. This ensures your wiring and library setup is correct before automating.
 
-    Performance: USB 2.0 on Pi Zero is okay for file transfers – copying a large audiobook (hundreds of MB) might take tens of seconds. The wireless part depends on your Wi-Fi network – the Pi Zero W’s Wi-Fi is decent (802.11n 2.4GHz) so it can probably receive a file as fast as the iPod can write it (iPod HDDs or flash in those models typically write a few MB/s). For audiobooks, that’s fine. Just be patient on very large syncs, and perhaps incorporate a progress indicator if using a web UI.
+    Performance: USB 2.0 on Pi Zero is okay for file transfers – copying a large audiobook (hundreds of MB) might take tens of seconds. The wireless part depends on your Wi-Fi network – the Pi Zero 2 W’s Wi-Fi is decent (802.11n 2.4 GHz) so it can probably receive a file as fast as the iPod can write it (iPod HDDs or flash in those models typically write a few MB/s). For audiobooks, that’s fine. Just be patient on very large syncs, and perhaps incorporate a progress indicator if using a web UI.
 
     Open-Source Libraries Summary:
 

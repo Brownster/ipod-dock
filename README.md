@@ -1,6 +1,9 @@
 # ipod-dock
 
-This project aims to sync an iPod Classic with a Raspberry Pi Zero W so music, podcasts and audiobooks can be uploaded over Wi-Fi.  The repository contains scripts and a web API to manage uploads, track listings and integration with an iPod dock.
+This project aims to sync an iPod Classic with a Raspberry Pi Zero 2 W so music, podcasts and audiobooks can be uploaded over Wi-Fi.  The repository contains scripts and a web API to manage uploads, track listings and integration with an iPod dock.
+The Pi Zero 2 W keeps the build compact and power efficient. If you prefer a bit
+more CPU power or the convenience of a full-size USB port, a Pi 3A+ is a good
+alternative.
 
 See [research.md](research.md) for notes on the hardware setup and [wiring instructions](docs/wiring.md) and [roadmap_v2.md](roadmap_v2.md) for planned tasks.
 
