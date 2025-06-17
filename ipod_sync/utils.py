@@ -97,18 +97,14 @@ def mount_ipod(device: str | None = None) -> None:
     if device is None:
         device = detect_ipod_device()
 
-    wait_for_device(IPOD_DEVICE)
+    wait_for_device(device)
 
     mount_point: Path = IPOD_MOUNT
     mount_point.mkdir(parents=True, exist_ok=True)
     logger.info("Mounting %s at %s", device, mount_point)
-    # When ``user`` mount permissions are configured in ``/etc/fstab`` a
-    # non-root user may only specify one of the mount point **or** device
-    # name. Passing both causes ``mount`` to abort with "must be superuser"
-    # even if the user is permitted to mount the device. Using only the
-    # mount point relies on the ``fstab`` entry to look up the device and
-    # works correctly for unprivileged users.
-    _run(["mount", str(mount_point)])
+    if not Path(device).exists():
+        raise RuntimeError(f"{device} does not exist")
+    _run(["mount", "-t", "vfat", str(device), str(mount_point)])
     try:
         Path(IPOD_STATUS_FILE).write_text("true")
     except Exception:  # pragma: no cover - filesystem errors
