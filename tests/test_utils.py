@@ -17,12 +17,13 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
     status = tmp_path / "status"
     device = tmp_path / "sdb1"
     device.write_text("")
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), mock.patch.object(
-        utils, "IPOD_STATUS_FILE", status
-    ), mock.patch.object(utils, "wait_for_device", return_value=True):
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+         mock.patch.object(utils, "wait_for_device", return_value=True), \
+         mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))
         mock_run.assert_called_with(
-            ["mount", "-t", "vfat", str(device), str(mount_point)],
+            ["sudo", "mount", "-t", "vfat", str(device), str(mount_point)],
             check=True,
             capture_output=True,
             text=True,
@@ -32,19 +33,43 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
+def test_mount_ipod_waits_for_label(mock_run, tmp_path):
+    mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
+    mount_point = tmp_path / "mnt"
+    status = tmp_path / "status"
+    device = tmp_path / "sdb2"
+    device.write_text("")
+
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+         mock.patch.object(utils, "wait_for_device", return_value=True), \
+         mock.patch.object(utils, "wait_for_label", return_value=device) as wfl, \
+         mock.patch("os.geteuid", return_value=1000):
+        utils.mount_ipod(utils.IPOD_DEVICE)
+        wfl.assert_called_once()
+        mock_run.assert_called_with(
+            ["sudo", "mount", "-t", "vfat", str(device), str(mount_point)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
 def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
     mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
     mount_point = tmp_path / "mnt"
     status = tmp_path / "status"
     status.write_text("true")
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), mock.patch.object(
-        utils, "IPOD_STATUS_FILE", status
-    ):
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+         mock.patch("os.geteuid", return_value=1000):
         utils.eject_ipod()
         mock_run.assert_has_calls(
             [
                 mock.call(
                     [
+                        "sudo",
                         "umount",
                         str(mount_point),
                     ],
@@ -54,6 +79,7 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                 ),
                 mock.call(
                     [
+                        "sudo",
                         "eject",
                         str(mount_point),
                     ],
@@ -71,6 +97,19 @@ def test_run_raises_on_error(mock_run):
     mock_run.side_effect = subprocess.CalledProcessError(1, ["cmd"], "", "fail")
     with pytest.raises(RuntimeError):
         utils._run(["cmd"])
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
+def test_run_uses_sudo_when_requested(mock_run):
+    mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
+    with mock.patch("os.geteuid", return_value=1000):
+        utils._run(["echo", "hi"], use_sudo=True)
+    mock_run.assert_called_with(
+        ["sudo", "echo", "hi"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
@@ -105,7 +144,7 @@ def test_mount_ipod_auto_detect(monkeypatch, tmp_path):
         return str(dev)
 
     monkeypatch.setattr(utils, "detect_ipod_device", fake_detect)
-    monkeypatch.setattr(utils, "_run", lambda cmd: None)
+    monkeypatch.setattr(utils, "_run", lambda cmd, **kw: None)
     monkeypatch.setattr(utils, "IPOD_MOUNT", Path("/tmp/mnt"))
     monkeypatch.setattr(utils, "wait_for_device", lambda p, t=5.0: True)
 
