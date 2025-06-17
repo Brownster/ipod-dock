@@ -96,6 +96,9 @@ def test_is_ipod_connected_mounts(monkeypatch):
 def test_is_ipod_connected_false(monkeypatch):
     m = mock.mock_open(read_data="/dev/bar /mnt xfs rw 0 0\n")
     monkeypatch.setattr("builtins.open", m)
+    status = Path("/nonexistent/status")
+    monkeypatch.setattr(api_helpers.config, "IPOD_STATUS_FILE", status)
+    monkeypatch.setattr(api_helpers, "STATUS_FILE", status)
     assert not api_helpers.is_ipod_connected("/dev/foo")
 
 

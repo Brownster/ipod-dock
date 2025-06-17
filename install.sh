@@ -69,7 +69,7 @@ fi
 sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$PROJECT_DIR"
 
 # Ensure the iPod mount point exists and the user can mount the device
-IPOD_DEVICE="/dev/sda1"
+IPOD_DEVICE="/dev/disk/by-label/IPOD"
 MOUNT_POINT="$TARGET_DIR/mnt/ipod"
 sudo mkdir -p "$MOUNT_POINT"
 sudo chown "$SERVICE_USER":"$SERVICE_USER" "$MOUNT_POINT"

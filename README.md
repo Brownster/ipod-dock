@@ -86,7 +86,13 @@ permission to mount the iPod's block device or the API will fail with a
 the device path in `/etc/fstab`; the default entry looks like:
 
 ```
-/dev/sda1 /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
+/dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
+```
+
+Label the iPod's FAT partition once with:
+
+```bash
+sudo fatlabel /dev/sdX2 IPOD
 ```
 
 The listener service attempts to detect the correct FAT partition
@@ -146,7 +152,7 @@ During the early development phase queued files can be synced manually using the
 `sync_from_queue` module:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/sda1
+python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
 ```
 
 Any audio files placed in the `sync_queue/` directory will be imported to the
