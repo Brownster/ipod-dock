@@ -11,7 +11,7 @@ import logging
 import subprocess
 from pathlib import Path
 
-from .config import IPOD_MOUNT
+from .config import IPOD_MOUNT, IPOD_DEVICE
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +38,45 @@ def _run(cmd: list[str]) -> None:
         ) from exc
 
 
-def mount_ipod(device: str) -> None:
+def detect_ipod_device() -> str:
+    """Detect the iPod's block device partition.
+
+    Enumerates block devices via ``lsblk`` and returns the first partition
+    reporting ``vfat`` or ``FAT`` as its filesystem type.  If detection fails
+    or no FAT partition is found, :data:`~ipod_sync.config.IPOD_DEVICE` is
+    returned as a fallback.
+    """
+
+    try:
+        result = subprocess.run(
+            ["lsblk", "-rno", "NAME,FSTYPE"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 2 and parts[1].lower() in {"vfat", "fat"}:
+                return f"/dev/{parts[0]}"
+    except Exception:  # pragma: no cover - system command may fail
+        logger.debug("Failed to detect iPod device", exc_info=True)
+
+    return IPOD_DEVICE
+
+
+def mount_ipod(device: str | None = None) -> None:
     """Mount the iPod ``device`` to :data:`~ipod_sync.config.IPOD_MOUNT`.
 
     Parameters
     ----------
     device:
-        The block device path (e.g. ``/dev/sda1``) representing the iPod.
+        The block device path (e.g. ``/dev/sda1``) representing the iPod. If
+        ``None`` the device is determined automatically via
+        :func:`detect_ipod_device`.
     """
+
+    if device is None:
+        device = detect_ipod_device()
 
     mount_point: Path = IPOD_MOUNT
     mount_point.mkdir(parents=True, exist_ok=True)

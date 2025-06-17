@@ -8,7 +8,7 @@ from typing import Iterable, Tuple
 
 import pyudev
 
-from . import config
+from . import config, utils
 from pathlib import Path
 from .logging_setup import setup_logging
 from .sync_from_queue import sync_queue
@@ -32,12 +32,16 @@ def _set_connected(connected: bool) -> None:
 
 
 def listen(
-    device: str = config.IPOD_DEVICE,
+    device: str | None = None,
     vendor: str = "05ac",
     product: str = "1209",
     monitor: Iterable[Tuple[str, pyudev.Device]] | None = None,
 ) -> None:
-    """Listen for matching USB device events and sync on attach."""
+    """Listen for matching USB device events and sync on attach.
+
+    If *device* is ``None`` the FAT partition is detected automatically when the
+    iPod is connected.
+    """
     if monitor is None:
         ctx = pyudev.Context()
         monitor = pyudev.Monitor.from_netlink(ctx)
@@ -57,7 +61,8 @@ def listen(
                 logger.info("iPod %s attached", serial)
                 _set_connected(True)
                 try:
-                    sync_queue(device)
+                    dev_path = device if device is not None else utils.detect_ipod_device()
+                    sync_queue(dev_path)
                 except Exception as exc:  # pragma: no cover - runtime errors
                     logger.error("Failed to sync: %s", exc)
             elif action == "remove":
@@ -69,8 +74,8 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Listen for iPod USB events")
     parser.add_argument(
         "--device",
-        default=config.IPOD_DEVICE,
-        help="Path to iPod block device",
+        default=None,
+        help="Path to iPod block device (auto-detect if omitted)",
     )
     parser.add_argument("--vendor", default="05ac", help="USB vendor ID")
     parser.add_argument("--product", default="1209", help="USB product ID")
