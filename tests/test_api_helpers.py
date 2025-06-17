@@ -78,6 +78,14 @@ def test_is_ipod_connected_status_file(monkeypatch, tmp_path):
     assert api_helpers.is_ipod_connected("/dev/foo")
 
 
+def test_is_ipod_connected_status_true(monkeypatch, tmp_path):
+    status = tmp_path / "status"
+    status.write_text("true")
+    monkeypatch.setattr(api_helpers.config, "IPOD_STATUS_FILE", status)
+    monkeypatch.setattr(api_helpers, "STATUS_FILE", status)
+    assert api_helpers.is_ipod_connected("/dev/foo")
+
+
 def test_is_ipod_connected_mounts(monkeypatch):
     data = "/dev/foo /mnt/ipod vfat rw 0 0\n"
     m = mock.mock_open(read_data=data)

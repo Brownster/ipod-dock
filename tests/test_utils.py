@@ -14,8 +14,10 @@ import ipod_sync.utils as utils
 def test_mount_ipod_calls_mount(mock_run, tmp_path):
     mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
     mount_point = tmp_path / "mnt"
+    status = tmp_path / "status"
     device = "/dev/sdb1"
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point):
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status):
         utils.mount_ipod(device)
         mock_run.assert_called_with(
             ["mount", str(mount_point)],
@@ -24,13 +26,17 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
             text=True,
         )
         assert mount_point.exists()
+        assert status.read_text() == "true"
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
 def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
     mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
     mount_point = tmp_path / "mnt"
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point):
+    status = tmp_path / "status"
+    status.write_text("true")
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status):
         utils.eject_ipod()
         mock_run.assert_has_calls(
             [
@@ -44,6 +50,7 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                 ], check=True, capture_output=True, text=True),
             ]
         )
+        assert not status.exists()
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
