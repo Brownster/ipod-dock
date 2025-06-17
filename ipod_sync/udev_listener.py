@@ -51,13 +51,16 @@ def listen(
     logger.info("Listening for iPod USB events")
     _set_connected(False)
     for action, dev in monitor:
-        if (
-            dev.get("ID_VENDOR_ID") == vendor
-            and dev.get("ID_MODEL_ID") == product
-        ):
+        if dev.get("ID_VENDOR_ID") == vendor and dev.get("ID_MODEL_ID") == product:
             serial = dev.get("ID_SERIAL_SHORT", "unknown")
             logger.debug("Event %s for %s", action, serial)
-            if action == "add" and dev.device_type == "partition" and dev.get("ID_FS_TYPE") == "vfat":
+            if (
+                action == "add"
+                and dev.device_type == "partition"
+                and (
+                    dev.get("ID_FS_LABEL") == "IPOD" or dev.get("ID_FS_TYPE") == "vfat"
+                )
+            ):
                 logger.info("iPod %s attached", serial)
                 _set_connected(True)
                 try:

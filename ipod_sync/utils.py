@@ -13,8 +13,20 @@ import json
 from pathlib import Path
 
 from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
+import time
 
 logger = logging.getLogger(__name__)
+
+
+def wait_for_device(path: str | Path, timeout: float = 5.0) -> bool:
+    """Return ``True`` when *path* exists within *timeout* seconds."""
+    dev = Path(path)
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if dev.exists():
+            return True
+        time.sleep(0.1)
+    return dev.exists()
 
 
 def _run(cmd: list[str]) -> None:
@@ -22,9 +34,7 @@ def _run(cmd: list[str]) -> None:
 
     logger.debug("Running command: %s", " ".join(cmd))
     try:
-        result = subprocess.run(
-            cmd, check=True, capture_output=True, text=True
-        )
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         if result.stdout:
             logger.debug(result.stdout.strip())
     except subprocess.CalledProcessError as exc:
@@ -87,6 +97,8 @@ def mount_ipod(device: str | None = None) -> None:
     if device is None:
         device = detect_ipod_device()
 
+    wait_for_device(IPOD_DEVICE)
+
     mount_point: Path = IPOD_MOUNT
     mount_point.mkdir(parents=True, exist_ok=True)
     logger.info("Mounting %s at %s", device, mount_point)
@@ -116,4 +128,3 @@ def eject_ipod() -> None:
         Path(IPOD_STATUS_FILE).unlink(missing_ok=True)
     except Exception:  # pragma: no cover - filesystem errors
         logger.debug("Failed to remove status file", exc_info=True)
-
