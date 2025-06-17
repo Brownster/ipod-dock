@@ -11,6 +11,9 @@ LOG_DIR = PROJECT_ROOT / "logs"
 # Mount point of the iPod on the filesystem
 IPOD_MOUNT = PROJECT_ROOT / "mnt" / "ipod"
 
+# File used by the udev listener to record connection status
+IPOD_STATUS_FILE = PROJECT_ROOT / "ipod_connected"
+
 # Default block device representing the iPod. This can be overridden
 # at runtime via command line arguments to the sync script.
 IPOD_DEVICE = "/dev/sda1"

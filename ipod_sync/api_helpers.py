@@ -6,6 +6,8 @@ import logging
 from pathlib import Path
 
 from . import config
+
+STATUS_FILE = Path(config.IPOD_STATUS_FILE)
 from .libpod_wrapper import (
     list_tracks,
     delete_track,
@@ -18,7 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 def is_ipod_connected(device: str = config.IPOD_DEVICE) -> bool:
-    """Return ``True`` if the iPod device exists or is mounted."""
+    """Return ``True`` if the iPod appears to be connected."""
+    if STATUS_FILE.exists():
+        return True
     dev = Path(device)
     if dev.exists():
         return True
