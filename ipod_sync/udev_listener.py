@@ -9,10 +9,26 @@ from typing import Iterable, Tuple
 import pyudev
 
 from . import config
+from pathlib import Path
 from .logging_setup import setup_logging
 from .sync_from_queue import sync_queue
 
+# Path used to indicate connection status to other components
+STATUS_FILE = Path(config.IPOD_STATUS_FILE)
+
 logger = logging.getLogger(__name__)
+
+
+def _set_connected(connected: bool) -> None:
+    """Create or remove the status file to reflect connection state."""
+    try:
+        if connected:
+            STATUS_FILE.write_text("1")
+        else:
+            if STATUS_FILE.exists():
+                STATUS_FILE.unlink()
+    except Exception:  # pragma: no cover - filesystem errors
+        logger.debug("Failed to update status file", exc_info=True)
 
 
 def listen(
@@ -29,6 +45,7 @@ def listen(
         monitor = iter(monitor)
 
     logger.info("Listening for iPod USB events")
+    _set_connected(False)
     for action, dev in monitor:
         if (
             dev.get("ID_VENDOR_ID") == vendor
@@ -38,10 +55,14 @@ def listen(
             logger.debug("Event %s for %s", action, serial)
             if action == "add":
                 logger.info("iPod %s attached", serial)
+                _set_connected(True)
                 try:
                     sync_queue(device)
                 except Exception as exc:  # pragma: no cover - runtime errors
                     logger.error("Failed to sync: %s", exc)
+            elif action == "remove":
+                logger.info("iPod %s removed", serial)
+                _set_connected(False)
 
 
 def main(argv: list[str] | None = None) -> None:
