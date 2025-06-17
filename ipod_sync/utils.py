@@ -8,12 +8,26 @@ modules do not need to worry about subprocess error handling or log output.
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import json
 from pathlib import Path
 
 from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
 import time
+
+LABEL_PATH = Path("/dev/disk/by-label/IPOD")
+
+
+def wait_for_label(timeout: float = 5.0) -> Path:
+    """Return the resolved device node for ``/dev/disk/by-label/IPOD``."""
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if LABEL_PATH.exists():
+            return LABEL_PATH.resolve()
+        time.sleep(0.1)
+    raise FileNotFoundError("iPod label path did not appear in time")
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +43,16 @@ def wait_for_device(path: str | Path, timeout: float = 5.0) -> bool:
     return dev.exists()
 
 
-def _run(cmd: list[str]) -> None:
-    """Run *cmd* via :mod:`subprocess` and raise ``RuntimeError`` on failure."""
+def _run(cmd: list[str], *, use_sudo: bool = False) -> None:
+    """Run *cmd* via :mod:`subprocess` and raise ``RuntimeError`` on failure.
+
+    If ``use_sudo`` is ``True`` and the current process is not running as root,
+    the command is prefixed with ``sudo``.  This allows mounting from an
+    unprivileged service when sudoers permits password-less execution.
+    """
+
+    if use_sudo and os.geteuid() != 0:
+        cmd = ["sudo", *cmd]
 
     logger.debug("Running command: %s", " ".join(cmd))
     try:
@@ -97,6 +119,12 @@ def mount_ipod(device: str | None = None) -> None:
     if device is None:
         device = detect_ipod_device()
 
+    if str(device) == str(IPOD_DEVICE):
+        try:
+            device = str(wait_for_label())
+        except FileNotFoundError as exc:
+            raise RuntimeError(str(exc)) from exc
+
     wait_for_device(device)
 
     mount_point: Path = IPOD_MOUNT
@@ -104,7 +132,7 @@ def mount_ipod(device: str | None = None) -> None:
     logger.info("Mounting %s at %s", device, mount_point)
     if not Path(device).exists():
         raise RuntimeError(f"{device} does not exist")
-    _run(["mount", "-t", "vfat", str(device), str(mount_point)])
+    _run(["mount", "-t", "vfat", str(device), str(mount_point)], use_sudo=True)
     try:
         Path(IPOD_STATUS_FILE).write_text("true")
     except Exception:  # pragma: no cover - filesystem errors
@@ -117,9 +145,9 @@ def eject_ipod() -> None:
 
     mount_point: Path = IPOD_MOUNT
     logger.info("Unmounting %s", mount_point)
-    _run(["umount", str(mount_point)])
+    _run(["umount", str(mount_point)], use_sudo=True)
     logger.info("Ejecting %s", mount_point)
-    _run(["eject", str(mount_point)])
+    _run(["eject", str(mount_point)], use_sudo=True)
     try:
         Path(IPOD_STATUS_FILE).unlink(missing_ok=True)
     except Exception:  # pragma: no cover - filesystem errors

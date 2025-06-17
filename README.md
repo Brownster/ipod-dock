@@ -90,8 +90,24 @@ permission to mount the iPod's block device or the API will fail with a
 the device path in `/etc/fstab`; the default entry looks like:
 
 ```
+
 /dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
 ```
+
+If you prefer, remove the ``User=`` line from ``*.service`` files so they run
+as ``root`` instead of granting mount permissions. Either approach works; the
+example above keeps the service unprivileged by allowing the ``ipod`` user to
+mount.
+
+Another option is to keep the service user unprivileged but delegate the mount
+command via ``sudo``.  Add a rule to ``/etc/sudoers`` such as:
+
+```
+ipod ALL = (root) NOPASSWD: /bin/mount -t vfat /dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod, /bin/umount /opt/ipod-dock/mnt/ipod
+```
+
+With that in place the helpers will call ``sudo mount`` and ``sudo umount`` when
+running under a non-root account.
 
 Label the iPod's FAT partition once with:
 
