@@ -17,6 +17,22 @@ from .utils import mount_ipod, eject_ipod
 logger = logging.getLogger(__name__)
 
 
+def is_ipod_connected(device: str = config.IPOD_DEVICE) -> bool:
+    """Return ``True`` if the iPod device exists or is mounted."""
+    dev = Path(device)
+    if dev.exists():
+        return True
+    try:
+        with open("/proc/mounts", "r", encoding="utf-8") as fh:
+            for line in fh:
+                parts = line.split()
+                if parts and parts[0] == str(device):
+                    return True
+    except Exception:  # pragma: no cover - platform specific failures
+        return False
+    return False
+
+
 def save_to_queue(
     name: str,
     data: bytes,

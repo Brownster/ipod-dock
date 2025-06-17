@@ -1,9 +1,10 @@
 # ipod-dock
 
-This project aims to sync an iPod Classic with a Raspberry Pi Zero 2 W so music, podcasts and audiobooks can be uploaded over Wi-Fi.  The repository contains scripts and a web API to manage uploads, track listings and integration with an iPod dock.
+**WIP** This project aims to sync an iPod Classic with a Raspberry Pi Zero 2 W so music, podcasts and audiobooks can be uploaded over Wi-Fi.  The repository contains scripts and a web API to manage uploads, track listings and integration with an iPod dock.
 The Pi Zero 2 W keeps the build compact and power efficient. If you prefer a bit
 more CPU power or the convenience of a full-size USB port, a Pi 3A+ is a good
 alternative.
+
 
 See [research.md](research.md) for notes on the hardware setup and [wiring instructions](docs/wiring.md) and [roadmap_v2.md](roadmap_v2.md) for planned tasks.
 
@@ -17,16 +18,43 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
   `ffmpeg` before import.
 - **FastAPI web API** providing upload, track management and statistics
   endpoints.
+- **Connection status indicator** via the `/status` endpoint to show whether the
+  iPod is connected.
 - **HTML dashboard** served by the API for manual uploads and browsing the
   library.
 - **Watcher daemon** using `watchdog` to trigger syncing when new files appear in
   the queue.
+- **USB listener** using `pyudev` to start syncing automatically when the iPod
+  is connected.
 - **Serial playback control** via the Apple Accessory Protocol for play/pause and
   track skipping.
 - **Rotating log files** stored under `logs/` for easy debugging.
 - **Systemd service units** so the API and watcher start automatically on boot.
 
+## Dock wiring
+
+The iPod's 30-pin connector carries USB and serial lines that can be wired
+directly to the Pi. For a basic connection:
+
+* **USB data** – connect pin 27 (D+) to the Pi's USB D+ and pin 25 (D-) to USB
+  D-. Wire pin 23 to the Pi's 5 V supply and pin 16 (or 15) to ground so the Pi
+  recognises the iPod as a normal USB device.
+* **Serial (optional)** – connect pin 12 (TX) and pin 13 (RX) to the Pi's UART
+  (GPIO14/15). Place a ~6.8 kΩ resistor between pin 21 and ground to enable
+  accessory mode for playback control.
+* **Audio** – pin 4 provides left line out, pin 3 right, with pin 2 as ground if
+  you want to feed speakers or an amplifier.
+
+See [docs/wiring.md](docs/wiring.md) for the full pin list.
+
 ## Setup
+
+To run this (still in testing)
+```bash
+sudo apt install git
+git clone https://github.com/Brownster/ipod-dock.git
+cd ipod-dock
+```
 
 A helper script `install.sh` automates dependency installation and sets up the
 systemd service units. Run it from the project root:
@@ -35,29 +63,79 @@ systemd service units. Run it from the project root:
 ./install.sh
 ```
 
-The installer creates a dedicated `ipod` user and installs the unit files under
-`/etc/systemd/system`. Start the services with:
+Or of you prefer this will get the job done
 
 ```bash
-sudo systemctl start ipod-api.service ipod-watcher.service
+sudo apt install git -y && sudo git clone https://github.com/Brownster/ipod-dock.git && cd ipod-dock && sudo ./install.sh
 ```
+
+
+The installer copies the project to `/opt/ipod-dock` so the services run from a
+path accessible to the `ipod` user. It creates or updates that user with
+`/opt/ipod-dock` as its home, installs the unit files under `/etc/systemd/system`
+and sets up a Python virtual environment with the dependencies. Ownership of the
+target directory is updated accordingly. Start the services with:
+
+
+```bash
+sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service
+```
+
+The services run under the dedicated `ipod` account. This user must have
+permission to mount the iPod's block device or the API will fail with a
+"must be superuser" error. `install.sh` creates the mount directory and adds an
+`/etc/fstab` entry so the `ipod` user can mount the device. If needed, adjust
+the device path in `/etc/fstab`; the default entry looks like:
+
+```
+/dev/sda1 /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
+```
+
+After updating `fstab` you can test with:
+
+```bash
+sudo -u ipod mount /opt/ipod-dock/mnt/ipod
+```
+
+Once `ipod-api.service` is running you can open the web dashboard in a browser.
+On the Pi itself visit `http://localhost:8000/`; from another machine replace
+`localhost` with the Pi's address.
 
 If you prefer to perform the steps manually, install the required system
 packages (on Raspberry Pi OS):
 
 ```bash
 sudo apt-get update
-sudo apt-get install python3-gpod libgpod-common ffmpeg
+sudo apt-get install libgpod-common ffmpeg
 ```
+
+Sadly debain distro bookworm does not provide the `python3-gpod` package, running
+`install.sh` will build the libgpod bindings from a maintained fork
+([`john8675309/libgpod-0.8.3`](https://github.com/john8675309/libgpod-0.8.3))
+with Python 3 support. This requires the SQLite development headers and libxml2
+development files which can be installed with:
+
+```bash
+sudo apt-get install libsqlite3-dev libxml2-dev
+```
+
+The script also installs other build tools such as `automake`.
 
 Create a Python virtual environment in the project root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 This repository will use the virtual environment for any Python tools and future dependencies.
+
+## Updating
+
+Run `./update.sh` from the same project directory used during installation to refresh the copy under `/opt/ipod-dock`.
+The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data.
+
 
 ## Syncing files
 
@@ -84,6 +162,12 @@ the server for development with:
 ```bash
 python -m ipod_sync.app
 ```
+
+With the server running, navigate to `http://localhost:8000/` (or use the Pi's
+address) to use the HTML dashboard for uploads and track browsing.
+
+The `/status` endpoint now reports whether the configured iPod device is
+connected via a `connected` boolean field.
 
 See [docs/development.md](docs/development.md) for the list of endpoints.
 Plugin developers can find usage examples in

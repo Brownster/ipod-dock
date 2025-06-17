@@ -50,7 +50,13 @@ def mount_ipod(device: str) -> None:
     mount_point: Path = IPOD_MOUNT
     mount_point.mkdir(parents=True, exist_ok=True)
     logger.info("Mounting %s at %s", device, mount_point)
-    _run(["mount", device, str(mount_point)])
+    # When ``user`` mount permissions are configured in ``/etc/fstab`` a
+    # non-root user may only specify one of the mount point **or** device
+    # name. Passing both causes ``mount`` to abort with "must be superuser"
+    # even if the user is permitted to mount the device. Using only the
+    # mount point relies on the ``fstab`` entry to look up the device and
+    # works correctly for unprivileged users.
+    _run(["mount", str(mount_point)])
 
 
 def eject_ipod() -> None:

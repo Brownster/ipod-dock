@@ -1,10 +1,10 @@
 [Unit]
-Description=iPod sync queue watcher
+Description=iPod USB listener
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/ipod-dock/.venv/bin/python -m ipod_sync.watcher
+ExecStart=/opt/ipod-dock/.venv/bin/python -m ipod_sync.udev_listener
 WorkingDirectory=/opt/ipod-dock
 Restart=on-failure
 User=ipod

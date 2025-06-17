@@ -9,6 +9,7 @@ __all__ = [
     "utils",
     "sync_from_queue",
     "watcher",
+    "udev_listener",
     "podcast_fetcher",
     "converter",
     "logging_setup",

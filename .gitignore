@@ -13,3 +13,4 @@ logs/
 uploads/
 sync_queue/
 .coverage
+node_modules/
