@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 def is_ipod_connected(device: str = config.IPOD_DEVICE) -> bool:
     """Return ``True`` if the iPod appears to be connected."""
     if STATUS_FILE.exists():
-        return True
+        try:
+            return STATUS_FILE.read_text().strip().lower() in {"1", "true"}
+        except Exception:  # pragma: no cover - filesystem errors
+            logger.debug("Failed to read status file", exc_info=True)
+            return True
     dev = Path(device)
     if dev.exists():
         return True

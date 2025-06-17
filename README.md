@@ -15,7 +15,9 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
 - **FastAPI web API** providing upload, track management and statistics
   endpoints.
 - **Connection status indicator** via the `/status` endpoint to show whether the
-  iPod is connected.
+  iPod is connected. A file named `ipod_connected` is created in the project root
+  when the iPod is mounted and removed on eject; the UI uses this to display the
+  current connection state.
 - **HTML dashboard** served by the API for manual uploads and browsing the
   library.
 - **Watcher daemon** using `watchdog` to trigger syncing when new files appear in
@@ -168,7 +170,8 @@ With the server running, navigate to `http://localhost:8000/` (or use the Pi's
 address) to use the HTML dashboard for uploads and track browsing.
 
 The `/status` endpoint now reports whether the configured iPod device is
-connected via a `connected` boolean field.
+connected via a `connected` boolean field. This value is derived from the
+`ipod_connected` file written when the device is mounted.
 
 See [docs/development.md](docs/development.md) for the list of endpoints.
 Plugin developers can find usage examples in

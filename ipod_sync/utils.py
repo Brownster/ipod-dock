@@ -11,7 +11,7 @@ import logging
 import subprocess
 from pathlib import Path
 
-from .config import IPOD_MOUNT, IPOD_DEVICE
+from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,10 @@ def mount_ipod(device: str | None = None) -> None:
     # mount point relies on the ``fstab`` entry to look up the device and
     # works correctly for unprivileged users.
     _run(["mount", str(mount_point)])
+    try:
+        Path(IPOD_STATUS_FILE).write_text("true")
+    except Exception:  # pragma: no cover - filesystem errors
+        logger.debug("Failed to update status file", exc_info=True)
 
 
 def eject_ipod() -> None:
@@ -99,4 +103,8 @@ def eject_ipod() -> None:
     _run(["umount", str(mount_point)])
     logger.info("Ejecting %s", mount_point)
     _run(["eject", str(mount_point)])
+    try:
+        Path(IPOD_STATUS_FILE).unlink(missing_ok=True)
+    except Exception:  # pragma: no cover - filesystem errors
+        logger.debug("Failed to remove status file", exc_info=True)
 
