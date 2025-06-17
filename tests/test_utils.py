@@ -15,13 +15,14 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
     mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
     mount_point = tmp_path / "mnt"
     status = tmp_path / "status"
-    device = "/dev/sdb1"
+    device = tmp_path / "sdb1"
+    device.write_text("")
     with mock.patch.object(utils, "IPOD_MOUNT", mount_point), mock.patch.object(
         utils, "IPOD_STATUS_FILE", status
     ), mock.patch.object(utils, "wait_for_device", return_value=True):
-        utils.mount_ipod(device)
+        utils.mount_ipod(str(device))
         mock_run.assert_called_with(
-            ["mount", str(mount_point)],
+            ["mount", "-t", "vfat", str(device), str(mount_point)],
             check=True,
             capture_output=True,
             text=True,
@@ -93,12 +94,15 @@ def test_detect_ipod_device_fallback(mock_run):
     assert dev == "/dev/foo"
 
 
-def test_mount_ipod_auto_detect(monkeypatch):
+def test_mount_ipod_auto_detect(monkeypatch, tmp_path):
     called = {}
+
+    dev = tmp_path / "ipod"
+    dev.write_text("")
 
     def fake_detect():
         called["called"] = True
-        return "/dev/ipod"
+        return str(dev)
 
     monkeypatch.setattr(utils, "detect_ipod_device", fake_detect)
     monkeypatch.setattr(utils, "_run", lambda cmd: None)
