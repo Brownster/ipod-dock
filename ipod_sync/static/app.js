@@ -19,6 +19,8 @@ async function initializeApp() {
     try {
         await loadTracks();
         await updateStats();
+        await checkDeviceStatus();
+        setInterval(checkDeviceStatus, 30000);
     } catch (err) {
         console.error('Initialization failed', err);
     }
@@ -239,6 +241,26 @@ async function updateStats() {
     }
     document.getElementById('storage-used').textContent = stats.storage_used + '%';
     document.getElementById('sync-queue').textContent = stats.queue;
+}
+
+async function checkDeviceStatus() {
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    try {
+        const res = await authFetch('/status');
+        const data = await res.json();
+        if (data.connected) {
+            statusIndicator.className = 'status-indicator status-connected';
+            statusText.textContent = 'iPod Connected';
+        } else {
+            statusIndicator.className = 'status-indicator status-disconnected';
+            statusText.textContent = 'iPod Disconnected';
+        }
+    } catch (err) {
+        console.error(err);
+        statusIndicator.className = 'status-indicator status-error';
+        statusText.textContent = 'Status Error';
+    }
 }
 
 async function syncNow() {

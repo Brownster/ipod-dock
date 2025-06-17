@@ -308,6 +308,10 @@ body {
     background: #4CAF50;
 }
 
+.status-disconnected {
+    background: #ccc;
+}
+
 .status-syncing {
     background: #FF9800;
     animation: pulse 1.5s infinite;
