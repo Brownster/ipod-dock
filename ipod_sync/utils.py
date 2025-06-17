@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+import json
 from pathlib import Path
 
 from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
@@ -39,25 +40,32 @@ def _run(cmd: list[str]) -> None:
 
 
 def detect_ipod_device() -> str:
-    """Detect the iPod's block device partition.
+    """Return the largest FAT formatted block device detected by ``lsblk``.
 
-    Enumerates block devices via ``lsblk`` and returns the first partition
-    reporting ``vfat`` or ``FAT`` as its filesystem type.  If detection fails
+    The helper parses ``lsblk`` JSON output and selects the biggest partition
+    reporting ``vfat`` (or ``fat``) as its filesystem type.  If detection fails
     or no FAT partition is found, :data:`~ipod_sync.config.IPOD_DEVICE` is
     returned as a fallback.
     """
 
     try:
         result = subprocess.run(
-            ["lsblk", "-rno", "NAME,FSTYPE"],
+            ["lsblk", "--json", "-b", "-o", "NAME,FSTYPE,SIZE"],
             check=True,
             capture_output=True,
             text=True,
         )
-        for line in result.stdout.splitlines():
-            parts = line.split()
-            if len(parts) >= 2 and parts[1].lower() in {"vfat", "fat"}:
-                return f"/dev/{parts[0]}"
+        info = json.loads(result.stdout)
+        candidates: list[tuple[int, str]] = []
+        for dev in info.get("blockdevices", []):
+            for part in dev.get("children", []) or []:
+                fstype = (part.get("fstype") or "").lower()
+                if fstype in {"vfat", "fat"}:
+                    size = int(part.get("size", 0))
+                    candidates.append((size, part["name"]))
+        if candidates:
+            _, name = max(candidates, key=lambda p: p[0])
+            return f"/dev/{name}"
     except Exception:  # pragma: no cover - system command may fail
         logger.debug("Failed to detect iPod device", exc_info=True)
 
@@ -70,7 +78,8 @@ def mount_ipod(device: str | None = None) -> None:
     Parameters
     ----------
     device:
-        The block device path (e.g. ``/dev/sda1``) representing the iPod. If
+        The block device path (e.g. ``/dev/disk/by-label/IPOD``) representing
+        the iPod. If
         ``None`` the device is determined automatically via
         :func:`detect_ipod_device`.
     """

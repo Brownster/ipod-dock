@@ -16,7 +16,7 @@ IPOD_STATUS_FILE = PROJECT_ROOT / "ipod_connected"
 
 # Default block device representing the iPod. This can be overridden
 # at runtime via command line arguments to the sync script.
-IPOD_DEVICE = "/dev/sda1"
+IPOD_DEVICE = "/dev/disk/by-label/IPOD"
 
 # Whether to keep a copy of files after they are successfully synced.
 KEEP_LOCAL_COPY = False

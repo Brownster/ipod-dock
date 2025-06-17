@@ -49,7 +49,7 @@ python -m ipod_sync.watcher
 You can also run a manual sync at any time:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/sda1
+python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
 ```
 
 Set environment variables to override defaults:

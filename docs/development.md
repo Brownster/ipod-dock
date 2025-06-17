@@ -61,7 +61,7 @@ default files are removed from the queue after a successful import.
 Run the script manually with:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/sda1
+python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
 ```
 
 The `--device` argument may be omitted if your iPod is available at the default

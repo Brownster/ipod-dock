@@ -17,12 +17,28 @@ class FakeMonitor:
             yield event
 
 
-def _device(vendor="05ac", product="1209", serial="123"):
-    return {
-        "ID_VENDOR_ID": vendor,
-        "ID_MODEL_ID": product,
-        "ID_SERIAL_SHORT": serial,
-    }
+class DummyDev(dict):
+    def __init__(
+        self,
+        node="/dev/sda2",
+        vendor="05ac",
+        product="1209",
+        serial="123",
+        fstype="vfat",
+        dtype="partition",
+    ):
+        super().__init__({
+            "ID_VENDOR_ID": vendor,
+            "ID_MODEL_ID": product,
+            "ID_SERIAL_SHORT": serial,
+            "ID_FS_TYPE": fstype,
+        })
+        self.device_node = node
+        self.device_type = dtype
+
+
+def _device(**kwargs):
+    return DummyDev(**kwargs)
 
 
 def test_listener_triggers_sync():
@@ -33,12 +49,13 @@ def test_listener_triggers_sync():
 
 
 def test_listener_auto_detects_device():
-    monitor = FakeMonitor([("add", _device())])
-    with mock.patch.object(listener.utils, "detect_ipod_device", return_value="/dev/sdx1") as det:
+    dev = _device(node="/dev/sdx2")
+    monitor = FakeMonitor([("add", dev)])
+    with mock.patch.object(listener.utils, "detect_ipod_device") as det:
         with mock.patch.object(listener, "sync_queue") as mock_sync:
             listener.listen(None, "05ac", "1209", monitor=monitor)
-            det.assert_called_once()
-            mock_sync.assert_called_once_with("/dev/sdx1")
+            det.assert_not_called()
+            mock_sync.assert_called_once_with("/dev/sdx2")
 
 
 def test_listener_ignores_non_matching():

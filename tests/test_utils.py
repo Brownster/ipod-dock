@@ -62,10 +62,16 @@ def test_run_raises_on_error(mock_run):
 
 @mock.patch("ipod_sync.utils.subprocess.run")
 def test_detect_ipod_device_parses_lsblk(mock_run):
-    output = "sda1 vfat\nsda2 ext4\n"
+    output = (
+        '{"blockdevices": ['
+        '{"name": "sda", "children": ['
+        '{"name": "sda1", "fstype": "hfs", "size": "100"},'
+        '{"name": "sda2", "fstype": "vfat", "size": "200"}'
+        ']}]}'
+    )
     mock_run.return_value = subprocess.CompletedProcess([], 0, output, "")
     dev = utils.detect_ipod_device()
-    assert dev == "/dev/sda1"
+    assert dev == "/dev/sda2"
 
 
 @mock.patch("ipod_sync.utils.subprocess.run", side_effect=FileNotFoundError)

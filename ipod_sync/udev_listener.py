@@ -45,7 +45,7 @@ def listen(
     if monitor is None:
         ctx = pyudev.Context()
         monitor = pyudev.Monitor.from_netlink(ctx)
-        monitor.filter_by("usb")
+        monitor.filter_by("block")
         monitor = iter(monitor)
 
     logger.info("Listening for iPod USB events")
@@ -57,15 +57,15 @@ def listen(
         ):
             serial = dev.get("ID_SERIAL_SHORT", "unknown")
             logger.debug("Event %s for %s", action, serial)
-            if action == "add":
+            if action == "add" and dev.device_type == "partition" and dev.get("ID_FS_TYPE") == "vfat":
                 logger.info("iPod %s attached", serial)
                 _set_connected(True)
                 try:
-                    dev_path = device if device is not None else utils.detect_ipod_device()
+                    dev_path = device if device is not None else dev.device_node
                     sync_queue(dev_path)
                 except Exception as exc:  # pragma: no cover - runtime errors
                     logger.error("Failed to sync: %s", exc)
-            elif action == "remove":
+            elif action == "remove" and dev.device_type == "disk":
                 logger.info("iPod %s removed", serial)
                 _set_connected(False)
 
