@@ -37,13 +37,13 @@ sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$TARGET_DIR"
 
 # Refresh systemd units and restart services
 if command -v systemctl >/dev/null; then
-    for svc in ipod-api.service ipod-watcher.service; do
+    for svc in ipod-api.service ipod-watcher.service ipod-listener.service; do
         tmp=$(mktemp)
         sed "s|User=.*|User=$SERVICE_USER|" "$PROJECT_DIR/$svc" > "$tmp"
         sudo mv "$tmp" "/etc/systemd/system/$svc"
     done
     sudo systemctl daemon-reload
-    sudo systemctl restart ipod-api.service ipod-watcher.service
+    sudo systemctl restart ipod-api.service ipod-watcher.service ipod-listener.service
 fi
 
 echo "Update complete."
