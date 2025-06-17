@@ -87,6 +87,11 @@ the device path in `/etc/fstab`; the default entry looks like:
 /dev/sda1 /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
 ```
 
+The listener service attempts to detect the correct FAT partition
+automatically when the iPod is connected.  You can override the detected
+device by passing ``--device`` to the scripts or updating
+``config.IPOD_DEVICE``.
+
 After updating `fstab` you can test with:
 
 ```bash

@@ -32,6 +32,15 @@ def test_listener_triggers_sync():
         mock_sync.assert_called_once_with("/dev/ipod")
 
 
+def test_listener_auto_detects_device():
+    monitor = FakeMonitor([("add", _device())])
+    with mock.patch.object(listener.utils, "detect_ipod_device", return_value="/dev/sdx1") as det:
+        with mock.patch.object(listener, "sync_queue") as mock_sync:
+            listener.listen(None, "05ac", "1209", monitor=monitor)
+            det.assert_called_once()
+            mock_sync.assert_called_once_with("/dev/sdx1")
+
+
 def test_listener_ignores_non_matching():
     monitor = FakeMonitor([("add", _device(vendor="abcd"))])
     with mock.patch.object(listener, "sync_queue") as mock_sync:

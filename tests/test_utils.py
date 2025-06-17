@@ -51,3 +51,33 @@ def test_run_raises_on_error(mock_run):
     mock_run.side_effect = subprocess.CalledProcessError(1, ["cmd"], "", "fail")
     with pytest.raises(RuntimeError):
         utils._run(["cmd"])
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
+def test_detect_ipod_device_parses_lsblk(mock_run):
+    output = "sda1 vfat\nsda2 ext4\n"
+    mock_run.return_value = subprocess.CompletedProcess([], 0, output, "")
+    dev = utils.detect_ipod_device()
+    assert dev == "/dev/sda1"
+
+
+@mock.patch("ipod_sync.utils.subprocess.run", side_effect=FileNotFoundError)
+def test_detect_ipod_device_fallback(mock_run):
+    with mock.patch.object(utils, "IPOD_DEVICE", "/dev/foo"):
+        dev = utils.detect_ipod_device()
+    assert dev == "/dev/foo"
+
+
+def test_mount_ipod_auto_detect(monkeypatch):
+    called = {}
+
+    def fake_detect():
+        called["called"] = True
+        return "/dev/ipod"
+
+    monkeypatch.setattr(utils, "detect_ipod_device", fake_detect)
+    monkeypatch.setattr(utils, "_run", lambda cmd: None)
+    monkeypatch.setattr(utils, "IPOD_MOUNT", Path("/tmp/mnt"))
+
+    utils.mount_ipod(None)
+    assert called["called"]
