@@ -128,8 +128,7 @@ This repository will use the virtual environment for any Python tools and future
 ## Updating
 
 Run `./update.sh` from the same project directory used during installation to refresh the copy under `/opt/ipod-dock`.
-The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data. It also verifies the
-`/etc/fstab` entry for the iPod mount so existing installations get the correct permissions automatically.
+The script synchronises files, updates Python dependencies and restarts the services while preserving logs and uploaded data.
 
 
 ## Syncing files
