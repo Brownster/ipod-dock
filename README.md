@@ -101,8 +101,9 @@ mount.
 
 ### Running unprivileged
 
-If you keep ``ipod-listener`` as a non-root service, add the following to
-``/etc/sudoers.d/ipod-dock`` (replace ``ipodsvc`` with your service user):
+If you keep ``ipod-listener`` as a non-root service, ``install.sh`` adds the
+required sudoers rule automatically. The entry looks like this (replace
+``ipodsvc`` with your service user if adding manually):
 
 ```
 ipodsvc ALL=(root) NOPASSWD: \
