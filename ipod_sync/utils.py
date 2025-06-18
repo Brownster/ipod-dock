@@ -11,6 +11,8 @@ import logging
 import os
 import subprocess
 import json
+import shutil
+import shlex
 from typing import Any
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
 import time
 
 LABEL_PATH = Path("/dev/disk/by-label/IPOD")
+MOUNT_BIN = shutil.which("mount") or "/bin/mount"
 
 
 def wait_for_label(timeout: float = 5.0) -> Path:
@@ -45,20 +48,42 @@ def wait_for_device(path: str | Path, timeout: float = 5.0) -> bool:
 
 
 def _run(
-    cmd: list[str], *, use_sudo: bool = False, check: bool = True, **kw: Any
+    cmd: list[str],
+    *,
+    use_sudo: bool = False,
+    check: bool = True,
+    capture_output: bool = False,
+    text: bool = True,
+    log_level: int = logging.DEBUG,
+    **popen_kw: Any,
 ) -> subprocess.CompletedProcess:
     """Run *cmd* via :mod:`subprocess`.
 
     ``use_sudo`` will prefix ``sudo --non-interactive --`` when not already
-    running as root. The exact command is logged and ``subprocess.run`` is
-    returned so callers may inspect ``stdout`` or ``stderr`` if needed.
+    running as root. The exact command is logged and a
+    ``subprocess.CompletedProcess`` is returned so callers may inspect
+    ``stdout`` or ``stderr`` if needed.
     """
 
     if use_sudo and os.geteuid() != 0:
         cmd = ["sudo", "--non-interactive", "--", *cmd]
 
-    logger.debug("RUN: %r", cmd)
-    return subprocess.run(cmd, check=check, **kw)
+    logger.log(log_level, "RUN: %s", " ".join(shlex.quote(c) for c in cmd))
+
+    if capture_output:
+        popen_kw.setdefault("stdout", subprocess.PIPE)
+        popen_kw.setdefault("stderr", subprocess.PIPE)
+    elif check:
+        popen_kw.setdefault("stderr", subprocess.PIPE)
+
+    proc = subprocess.run(cmd, check=False, text=text, **popen_kw)
+
+    if check and proc.returncode != 0:
+        raise subprocess.CalledProcessError(
+            proc.returncode, cmd, output=proc.stdout, stderr=proc.stderr
+        )
+
+    return proc
 
 
 def detect_ipod_device() -> str:
@@ -122,12 +147,21 @@ def mount_ipod(device: str | None = None) -> None:
     logger.info("Mounting %s at %s", device, mount_point)
     if not Path(device).exists():
         raise RuntimeError(f"{device} does not exist")
-    _run(
-        ["mount", "-t", "vfat", str(device), str(mount_point)],
-        use_sudo=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        _run(
+            [MOUNT_BIN, "-t", "vfat", "--", str(device), str(mount_point)],
+            use_sudo=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode == 1 and "password" in (exc.stderr or "").lower():
+            logger.error(
+                "Mount failed: sudo requires a password. "
+                "Add the ipod-dock sudoers rule or run the service as root."
+            )
+            return
+        raise
     try:
         Path(IPOD_STATUS_FILE).write_text("true")
     except Exception:  # pragma: no cover - filesystem errors

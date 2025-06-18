@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from unittest import mock
 import subprocess
+import logging
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,14 +28,16 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
                 "sudo",
                 "--non-interactive",
                 "--",
-                "mount",
+                utils.MOUNT_BIN,
                 "-t",
                 "vfat",
+                "--",
                 str(device),
                 str(mount_point),
             ],
-            check=True,
-            capture_output=True,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         )
         assert mount_point.exists()
@@ -61,14 +64,16 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
                 "sudo",
                 "--non-interactive",
                 "--",
-                "mount",
+                utils.MOUNT_BIN,
                 "-t",
                 "vfat",
+                "--",
                 str(device),
                 str(mount_point),
             ],
-            check=True,
-            capture_output=True,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         )
 
@@ -93,8 +98,9 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                         "umount",
                         str(mount_point),
                     ],
-                    check=True,
-                    capture_output=True,
+                    check=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
                 ),
                 mock.call(
@@ -105,8 +111,9 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
                         "eject",
                         str(mount_point),
                     ],
-                    check=True,
-                    capture_output=True,
+                    check=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
                 ),
             ]
@@ -116,9 +123,10 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
 
 @mock.patch("ipod_sync.utils.subprocess.run")
 def test_run_raises_on_error(mock_run):
-    mock_run.side_effect = subprocess.CalledProcessError(1, ["cmd"], "", "fail")
-    with pytest.raises(subprocess.CalledProcessError):
-        utils._run(["cmd"])
+    mock_run.return_value = subprocess.CompletedProcess(["cmd"], 1, "", "fail")
+    with pytest.raises(subprocess.CalledProcessError) as exc:
+        utils._run(["cmd"], capture_output=True)
+    assert exc.value.stderr == "fail"
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
@@ -128,8 +136,25 @@ def test_run_uses_sudo_when_requested(mock_run):
         utils._run(["echo", "hi"], use_sudo=True)
     mock_run.assert_called_with(
         ["sudo", "--non-interactive", "--", "echo", "hi"],
-        check=True,
+        check=False,
+        stderr=subprocess.PIPE,
+        text=True,
     )
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
+def test_mount_ipod_reports_sudo_password_error(mock_run, tmp_path, caplog):
+    mock_run.return_value = subprocess.CompletedProcess([], 1, "", "sudo: a password is required")
+    mount_point = tmp_path / "mnt"
+    device = tmp_path / "sdb1"
+    device.write_text("")
+    caplog.set_level(logging.ERROR)
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", mount_point / "status"), \
+         mock.patch.object(utils, "wait_for_device", return_value=True), \
+         mock.patch("os.geteuid", return_value=1000):
+        utils.mount_ipod(str(device))
+    assert any("sudo requires a password" in r.message for r in caplog.records)
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")

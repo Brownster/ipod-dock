@@ -99,15 +99,19 @@ as ``root`` instead of granting mount permissions. Either approach works; the
 example above keeps the service unprivileged by allowing the ``ipod`` user to
 mount.
 
-Another option is to keep the service user unprivileged but delegate the mount
-command via ``sudo``.  Add a rule to ``/etc/sudoers`` such as:
+### Running unprivileged
+
+If you keep ``ipod-listener`` as a non-root service, add the following to
+``/etc/sudoers.d/ipod-dock`` (replace ``ipodsvc`` with your service user):
 
 ```
-ipod ALL = (root) NOPASSWD: /bin/mount -t vfat /dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod, /bin/umount /opt/ipod-dock/mnt/ipod
+ipodsvc ALL=(root) NOPASSWD: \
+    /bin/mount -t vfat /dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod, \
+    /bin/umount /opt/ipod-dock/mnt/ipod
 ```
 
-With that in place the helpers will call ``sudo mount`` and ``sudo umount`` when
-running under a non-root account.
+The listener auto-detects when it is not running as uid 0 and silently prefixes
+those commands with ``sudo --non-interactive --``.
 
 Label the iPod's FAT partition once with:
 
