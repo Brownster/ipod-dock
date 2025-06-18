@@ -78,6 +78,17 @@ if ! grep -qs "${MOUNT_POINT}" /etc/fstab; then
     echo "$IPOD_DEVICE $MOUNT_POINT vfat noauto,user,uid=$SERVICE_USER,gid=$SERVICE_USER 0 0" | sudo tee -a /etc/fstab
 fi
 
+# Allow the service account to mount and unmount without a password
+SUDOERS_FILE="/etc/sudoers.d/ipod-dock"
+SUDO_RULE="${SERVICE_USER} ALL=(root) NOPASSWD: \\
+    /bin/mount -t vfat ${IPOD_DEVICE} ${MOUNT_POINT}, \\
+    /bin/umount ${MOUNT_POINT}"
+if [ ! -f "$SUDOERS_FILE" ]; then
+    echo "Adding sudoers rule for $SERVICE_USER at $SUDOERS_FILE"
+    echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" >/dev/null
+    sudo chmod 0440 "$SUDOERS_FILE"
+fi
+
 # Install systemd services if available
 if command -v systemctl >/dev/null; then
     for svc in ipod-api.service ipod-watcher.service ipod-listener.service; do
