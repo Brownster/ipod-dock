@@ -34,7 +34,7 @@ def _set_connected(connected: bool) -> None:
 def listen(
     device: str | None = None,
     vendor: str = "05ac",
-    product: str = "1209",
+    product: str = "129e",
     monitor: Iterable[Tuple[str, pyudev.Device]] | None = None,
 ) -> None:
     """Listen for matching USB device events and sync on attach.
@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> None:
         help="Path to iPod block device (auto-detect if omitted)",
     )
     parser.add_argument("--vendor", default="05ac", help="USB vendor ID")
-    parser.add_argument("--product", default="1209", help="USB product ID")
+    parser.add_argument("--product", default="129e", help="USB product ID")
     args = parser.parse_args(argv)
 
     setup_logging()
