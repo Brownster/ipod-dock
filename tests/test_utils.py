@@ -86,7 +86,8 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
     status.write_text("true")
     with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
          mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
-         mock.patch("os.geteuid", return_value=1000):
+         mock.patch("os.geteuid", return_value=1000), \
+         mock.patch("os.path.ismount", return_value=True):
         utils.eject_ipod()
         mock_run.assert_has_calls(
             [
@@ -119,6 +120,19 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
             ]
         )
         assert not status.exists()
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
+def test_eject_ipod_skips_when_not_mounted(mock_run, tmp_path):
+    mount_point = tmp_path / "mnt"
+    status = tmp_path / "status"
+    status.write_text("true")
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+         mock.patch("os.path.ismount", return_value=False):
+        utils.eject_ipod()
+    mock_run.assert_not_called()
+    assert not status.exists()
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")

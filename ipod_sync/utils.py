@@ -143,6 +143,13 @@ def mount_ipod(device: str | None = None) -> None:
     wait_for_device(device)
 
     mount_point: Path = IPOD_MOUNT
+    if os.path.ismount(mount_point):
+        logger.debug("%s already mounted", mount_point)
+        try:
+            Path(IPOD_STATUS_FILE).write_text("true")
+        except Exception:
+            logger.debug("Failed to update status file", exc_info=True)
+        return
     mount_point.mkdir(parents=True, exist_ok=True)
     logger.info("Mounting %s at %s", device, mount_point)
     if not Path(device).exists():
@@ -173,10 +180,13 @@ def eject_ipod() -> None:
     :data:`~ipod_sync.config.IPOD_MOUNT`."""
 
     mount_point: Path = IPOD_MOUNT
-    logger.info("Unmounting %s", mount_point)
-    _run(["umount", str(mount_point)], use_sudo=True, capture_output=True, text=True)
-    logger.info("Ejecting %s", mount_point)
-    _run(["eject", str(mount_point)], use_sudo=True, capture_output=True, text=True)
+    if os.path.ismount(mount_point):
+        logger.info("Unmounting %s", mount_point)
+        _run(["umount", str(mount_point)], use_sudo=True, capture_output=True, text=True)
+        logger.info("Ejecting %s", mount_point)
+        _run(["eject", str(mount_point)], use_sudo=True, capture_output=True, text=True)
+    else:
+        logger.debug("%s not mounted", mount_point)
     try:
         Path(IPOD_STATUS_FILE).unlink(missing_ok=True)
     except Exception:  # pragma: no cover - filesystem errors

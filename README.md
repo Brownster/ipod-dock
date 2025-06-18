@@ -83,11 +83,14 @@ target directory is updated accordingly. Start the services with:
 sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service
 ```
 
-The services run under the dedicated `ipod` account. This user must have
-permission to mount the iPod's block device or the API will fail with a
-"must be superuser" error. `install.sh` creates the mount directory and adds an
-`/etc/fstab` entry so the `ipod` user can mount the device. If needed, adjust
-the device path in `/etc/fstab`; the default entry looks like:
+The services run under the dedicated `ipod` account. `install.sh` now installs
+a `udev` rule and `ipod-mount.service` so the iPod's data partition is
+mounted automatically when connected. The service detects the first FAT
+partition and mounts it at `/opt/ipod-dock/mnt/ipod` using appropriate
+`uid`, `gid` and `umask` options so the `ipod` user has access. If you prefer
+manual control the script also adds an `/etc/fstab` entry so the `ipod` user
+can mount the device without privileges. Adjust the device path in `/etc/fstab`
+if needed; the default entry looks like:
 
 ```
 
