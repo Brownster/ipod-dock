@@ -26,6 +26,7 @@ fi
 
 sudo -u "$SERVICE_USER" "$TARGET_DIR/.venv/bin/pip" install -U pip
 sudo -u "$SERVICE_USER" "$TARGET_DIR/.venv/bin/pip" install -r "$TARGET_DIR/requirements.txt"
+sudo -u "$SERVICE_USER" "$TARGET_DIR/.venv/bin/pip" install audible-cli
 
 # Ensure the service user exists
 if id "$SERVICE_USER" >/dev/null 2>&1; then

@@ -57,6 +57,7 @@ source "$PROJECT_DIR/.venv/bin/activate"
 # Install Python packages
 pip install -U pip
 pip install -r "$PROJECT_DIR/requirements.txt"
+pip install audible-cli
 
 # Ensure dedicated service user exists
 # Create or update the service user
