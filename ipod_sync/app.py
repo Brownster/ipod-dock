@@ -27,6 +27,8 @@ from .api_helpers import (
 )
 from . import sync_from_queue, podcast_fetcher, audible_import
 
+from . import youtube_downloader
+
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ipod-dock")
@@ -80,7 +82,10 @@ async def audible_convert(payload: dict) -> dict:
         raise HTTPException(400, "asin and title required")
     if not audible_import.IS_AUTHENTICATED:
         raise HTTPException(401, "Not authenticated")
-    if asin in audible_import.JOBS and audible_import.JOBS[asin]["status"] in {"queued", "processing"}:
+    if asin in audible_import.JOBS and audible_import.JOBS[asin]["status"] in {
+        "queued",
+        "processing",
+    }:
         return {"message": "Job is already in progress."}
     audible_import.queue_conversion(asin, title)
     return {"message": "Job queued successfully."}
@@ -96,7 +101,9 @@ async def audible_download(filename: str):
     path = audible_import.DOWNLOADS_DIR / filename
     if not path.exists():
         raise HTTPException(404, "file not found")
-    return FileResponse(str(path), filename=filename, media_type="application/octet-stream")
+    return FileResponse(
+        str(path), filename=filename, media_type="application/octet-stream"
+    )
 
 
 @app.get("/status", dependencies=[auth_dep])
@@ -122,6 +129,37 @@ async def upload_category(category: str, file: UploadFile = File(...)) -> dict:
         raise HTTPException(400, "invalid category")
     data = await file.read()
     path = save_to_queue(file.filename, data, category=category)
+    return {"queued": path.name, "category": category}
+
+
+@app.post("/youtube", dependencies=[auth_dep])
+async def youtube_download(payload: dict) -> dict:
+    url = payload.get("url")
+    category = payload.get("category", "music")
+    if not url:
+        raise HTTPException(400, "url required")
+    if category not in {"music", "audiobook", "podcast"}:
+        raise HTTPException(400, "invalid category")
+    try:
+        path = youtube_downloader.download_audio(url, category)
+    except Exception as exc:
+        logger.error("YouTube download failed: %s", exc)
+        raise HTTPException(500, str(exc))
+    return {"queued": path.name, "category": category}
+
+
+@app.post("/youtube/{category}", dependencies=[auth_dep])
+async def youtube_download_category(category: str, payload: dict) -> dict:
+    url = payload.get("url")
+    if not url:
+        raise HTTPException(400, "url required")
+    if category not in {"music", "audiobook", "podcast"}:
+        raise HTTPException(400, "invalid category")
+    try:
+        path = youtube_downloader.download_audio(url, category)
+    except Exception as exc:
+        logger.error("YouTube download failed: %s", exc)
+        raise HTTPException(500, str(exc))
     return {"queued": path.name, "category": category}
 
 
@@ -253,7 +291,9 @@ def main() -> None:
         print("\n[!] Audible authentication is required.")
         print("    Please follow the prompts from 'audible-cli' to log in.")
         print("    This will likely open a browser window.")
-        choice = input("    Press ENTER to start authentication, or type 'q' to quit: ").lower()
+        choice = input(
+            "    Press ENTER to start authentication, or type 'q' to quit: "
+        ).lower()
         if choice == "q":
             print("Exiting.")
             return
