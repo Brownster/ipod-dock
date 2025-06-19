@@ -148,11 +148,10 @@ sudo apt-get update
 sudo apt-get install libgpod-common ffmpeg
 ```
 
-Install `audible-cli` to enable the Audible import feature and run the
-quickstart to authenticate:
+`install.sh` and `update.sh` install `audible-cli` automatically. Run the
+quickstart afterwards to authenticate:
 
 ```bash
-pip install audible-cli
 audible quickstart
 ```
 
