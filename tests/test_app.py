@@ -178,6 +178,12 @@ def test_index_page():
     assert "<title>iPod Dock</title>" in response.text
 
 
+def test_audible_page():
+    response = client.get("/audible")
+    assert response.status_code == 200
+    assert "Audible Library Converter" in response.text
+
+
 @mock.patch.object(app_module, "playback_controller")
 def test_control_endpoint(mock_ctl):
     response = client.post("/control/play")

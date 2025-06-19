@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audible Web Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .library-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+        }
+        
+        #library-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #book-list {
+            list-style: none;
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .book-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .book-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .book-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .book-details {
+            flex: 1;
+        }
+        
+        .book-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+        
+        .book-author {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .convert-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 110px;
+            text-align: center;
+        }
+        
+        .convert-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .convert-btn:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #cbd5e0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255,255,255,0.2);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+        
+        #status-area {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .status-item {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #e2e8f0;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+        
+        .status-complete {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+        
+        .status-complete .status-badge {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .status-error {
+            border-left-color: #f56565;
+            background: #fffafa;
+        }
+        
+        .status-error .status-badge {
+            background: #f56565;
+            color: white;
+        }
+        
+        .status-processing {
+            border-left-color: #ed8936;
+            background: #fffaf0;
+        }
+        
+        .status-processing .status-badge {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .status-queued {
+            border-left-color: #4299e1;
+            background: #f7faff;
+        }
+        
+        .status-queued .status-badge {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            color: #48bb78;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .download-link:hover {
+            color: #38a169;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 2rem;
+        }
+        
+        .error-state {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .book-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+            
+            .convert-btn {
+                align-self: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Audible Library Converter</h1>
+            <p>Convert your Audible audiobooks with ease</p>
+        </div>
+
+        <div class="main-content">
+            <div class="library-section">
+                <h2 class="section-title">Your Library</h2>
+                
+                <div id="library-loading">
+                    <div class="loading-spinner"></div>
+                    Loading your library...
+                </div>
+                
+                <ul id="book-list"></ul>
+            </div>
+
+            <div class="status-section">
+                <h2 class="section-title">Conversion Status</h2>
+                <div id="status-area">
+                    <div class="empty-state">No active conversions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bookList = document.getElementById('book-list');
+        const statusArea = document.getElementById('status-area');
+        const libraryLoading = document.getElementById('library-loading');
+
+        // Fetch the library and render it
+        async function fetchLibrary() {
+            try {
+                const response = await fetch('/api/library');
+                const library = await response.json();
+                libraryLoading.style.display = 'none';
+
+                if (library.length === 0) {
+                    bookList.innerHTML = '<div class="empty-state">No books found in your library</div>';
+                    return;
+                }
+
+                library.forEach(book => {
+                    const author = book.authors.map(a => a.name).join(', ');
+                    const li = document.createElement('li');
+                    li.className = 'book-item';
+                    li.innerHTML = `
+                        <div class="book-content">
+                            <div class="book-details">
+                                <div class="book-title">${escapeHtml(book.title)}</div>
+                                <div class="book-author">by ${escapeHtml(author)}</div>
+                            </div>
+                            <button class="convert-btn" data-asin="${book.asin}" data-title="${escapeHtml(book.title)}">
+                                Convert
+                            </button>
+                        </div>
+                    `;
+                    bookList.appendChild(li);
+                });
+            } catch (error) {
+                libraryLoading.innerHTML = `
+                    <div class="error-state">
+                        Failed to load library. Please ensure audible-cli is authenticated and try again.
+                    </div>
+                `;
+                console.error(error);
+            }
+        }
+
+        // Handle clicks on the "Convert" button
+        bookList.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('convert-btn')) {
+                const button = event.target;
+                const asin = button.dataset.asin;
+                const title = button.dataset.title;
+                
+                button.disabled = true;
+                button.textContent = 'Queued';
+
+                try {
+                    await fetch('/api/convert', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ asin, title })
+                    });
+                } catch (error) {
+                    button.disabled = false;
+                    button.textContent = 'Convert';
+                    console.error('Failed to queue conversion:', error);
+                }
+            }
+        });
+
+        // Poll for status updates every 3 seconds
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/status');
+                const jobs = await response.json();
+
+                if (Object.keys(jobs).length === 0) {
+                    statusArea.innerHTML = '<div class="empty-state">No active conversions</div>';
+                    return;
+                }
+
+                statusArea.innerHTML = '';
+                for (const asin in jobs) {
+                    const job = jobs[asin];
+                    const statusDiv = document.createElement('div');
+                    statusDiv.className = `status-item status-${job.status}`;
+                    
+                    let statusContent = '';
+                    let badgeText = '';
+                    
+                    if (job.status === 'complete') {
+                        badgeText = 'Complete';
+                        statusContent = `
+                            <div class="status-title">${escapeHtml(job.title)}</div>
+                            <span class="status-badge">${badgeText}</span>
+                            <a href="/downloads/${job.file}" class="download-link" download>
+                                ⬇ Download File
+                            </a>
+                        `;
+                    } else if (job.status === 'error') {
+                        badgeText = 'Error';
+                        statusContent = `
+                            <div class="status-title">${escapeHtml(job.title)}</div>
+                            <span class="status-badge">${badgeText}</span>
+                            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #c53030;">
+                                ${escapeHtml(job.message)}
+                            </div>
+                        `;
+                    } else if (job.status === 'processing') {
+                        badgeText = 'Processing';
+                        statusContent = `
+                            <div class="status-title">${escapeHtml(job.title)}</div>
+                            <span class="status-badge">${badgeText}</span>
+                            <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                Progress: ${escapeHtml(job.progress)}
+                            </div>
+                        `;
+                    } else {
+                        badgeText = 'Queued';
+                        statusContent = `
+                            <div class="status-title">${escapeHtml(job.title)}</div>
+                            <span class="status-badge">${badgeText}</span>
+                        `;
+                    }
+                    
+                    statusDiv.innerHTML = statusContent;
+                    statusArea.appendChild(statusDiv);
+
+                    // Update the button in the main list
+                    const button = document.querySelector(`.convert-btn[data-asin="${asin}"]`);
+                    if (button) {
+                        if (job.status === 'complete') {
+                            button.textContent = 'Converted';
+                            button.disabled = true;
+                        } else if (job.status === 'error') {
+                            button.textContent = 'Error';
+                            button.disabled = false;
+                        } else {
+                            button.textContent = 'Processing...';
+                            button.disabled = true;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+        }, 3000);
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initial load
+        fetchLibrary();
+    </script>
+</body>
+</html>

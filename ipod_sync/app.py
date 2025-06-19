@@ -44,6 +44,14 @@ async def index() -> str:
     return page.read_text(encoding="utf-8")
 
 
+@app.get("/audible", response_class=HTMLResponse)
+async def audible_page() -> str:
+    """Serve the Audible import page."""
+    logger.debug("Serving audible page")
+    page = resources.files("ipod_sync.templates").joinpath("audible.html")
+    return page.read_text(encoding="utf-8")
+
+
 @app.get("/status", dependencies=[auth_dep])
 async def status() -> dict:
     """Return service health information."""
