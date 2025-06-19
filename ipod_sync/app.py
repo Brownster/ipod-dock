@@ -53,9 +53,18 @@ async def audible_page() -> str:
     return page.read_text(encoding="utf-8")
 
 
+@app.get("/api/auth/status")
+async def auth_status() -> dict:
+    """Return whether audible-cli is authenticated."""
+    audible_import.check_authentication()
+    return {"authenticated": audible_import.IS_AUTHENTICATED}
+
+
 @app.get("/api/library")
 async def audible_library() -> list[dict]:
     """Return the user's Audible library."""
+    if not audible_import.IS_AUTHENTICATED:
+        raise HTTPException(401, "Not authenticated")
     try:
         return audible_import.fetch_library()
     except subprocess.CalledProcessError as exc:
@@ -69,6 +78,8 @@ async def audible_convert(payload: dict) -> dict:
     title = payload.get("title")
     if not asin or not title:
         raise HTTPException(400, "asin and title required")
+    if not audible_import.IS_AUTHENTICATED:
+        raise HTTPException(401, "Not authenticated")
     if asin in audible_import.JOBS and audible_import.JOBS[asin]["status"] in {"queued", "processing"}:
         return {"message": "Job is already in progress."}
     audible_import.queue_conversion(asin, title)
@@ -234,6 +245,25 @@ def main() -> None:
     import uvicorn
 
     setup_logging()
+
+    print("=" * 60)
+    print("Checking Audible Authentication Status...")
+    authenticated = audible_import.check_authentication()
+    while not authenticated:
+        print("\n[!] Audible authentication is required.")
+        print("    Please follow the prompts from 'audible-cli' to log in.")
+        print("    This will likely open a browser window.")
+        choice = input("    Press ENTER to start authentication, or type 'q' to quit: ").lower()
+        if choice == "q":
+            print("Exiting.")
+            return
+        subprocess.run(["audible", "quickstart"])
+        print("\nChecking authentication status again...")
+        authenticated = audible_import.check_authentication()
+        if not authenticated:
+            print("[!] Authentication still not detected. Please try again.")
+    print("\n[\u2713] Audible is authenticated.")
+    print("=" * 60)
     uvicorn.run("ipod_sync.app:app", host="0.0.0.0", port=8000, log_level="info")
 
 
