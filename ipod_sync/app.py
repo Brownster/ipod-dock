@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from importlib import resources
 
@@ -24,7 +25,7 @@ from .api_helpers import (
     create_new_playlist,
     is_ipod_connected,
 )
-from . import sync_from_queue, podcast_fetcher
+from . import sync_from_queue, podcast_fetcher, audible_import
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,41 @@ async def audible_page() -> str:
     logger.debug("Serving audible page")
     page = resources.files("ipod_sync.templates").joinpath("audible.html")
     return page.read_text(encoding="utf-8")
+
+
+@app.get("/api/library")
+async def audible_library() -> list[dict]:
+    """Return the user's Audible library."""
+    try:
+        return audible_import.fetch_library()
+    except subprocess.CalledProcessError as exc:
+        logger.error("Failed to fetch library: %s", exc.stderr)
+        raise HTTPException(500, "Failed to fetch library")
+
+
+@app.post("/api/convert")
+async def audible_convert(payload: dict) -> dict:
+    asin = payload.get("asin")
+    title = payload.get("title")
+    if not asin or not title:
+        raise HTTPException(400, "asin and title required")
+    if asin in audible_import.JOBS and audible_import.JOBS[asin]["status"] in {"queued", "processing"}:
+        return {"message": "Job is already in progress."}
+    audible_import.queue_conversion(asin, title)
+    return {"message": "Job queued successfully."}
+
+
+@app.get("/api/status")
+async def audible_status() -> dict:
+    return audible_import.JOBS
+
+
+@app.get("/downloads/{filename}")
+async def audible_download(filename: str):
+    path = audible_import.DOWNLOADS_DIR / filename
+    if not path.exists():
+        raise HTTPException(404, "file not found")
+    return FileResponse(str(path), filename=filename, media_type="application/octet-stream")
 
 
 @app.get("/status", dependencies=[auth_dep])

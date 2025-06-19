@@ -14,6 +14,7 @@ __all__ = [
     "converter",
     "logging_setup",
     "aap_controller",
+    "audible_import",
     "templates",
 ]
 

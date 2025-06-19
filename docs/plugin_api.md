@@ -95,6 +95,18 @@ The response lists the filenames that were downloaded.
 ### `GET /stats`
 Return basic dashboard information such as track count, queue size and storage usage.
 
+### `GET /api/library`
+List books in your Audible library. Requires `audible-cli` to be authenticated on the server.
+
+### `POST /api/convert`
+Queue a book for conversion. Provide a JSON object containing `asin` and `title`.
+
+### `GET /api/status`
+Retrieve the status of all queued Audible conversions.
+
+### `GET /downloads/{file}`
+Download a completed M4B file. Converted books are also placed in the queue for syncing.
+
 ## Notes
 
 Provide the correct `X-API-Key` header with every request or the server will return `401 Unauthorized`. Uploaded files in formats the iPod does not natively support will be converted to MP3 using `ffmpeg` during the sync step.

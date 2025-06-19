@@ -16,6 +16,8 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
   the iPod on the next sync run.
 - **Automatic conversion** – unsupported formats are converted to MP3 with
   `ffmpeg` before import.
+- **Audible integration** – convert books from your Audible library to M4B and
+  queue them for syncing.
 - **FastAPI web API** providing upload, track management and statistics
   endpoints.
 - **Connection status indicator** via the `/status` endpoint to show whether the
@@ -144,6 +146,14 @@ packages (on Raspberry Pi OS):
 ```bash
 sudo apt-get update
 sudo apt-get install libgpod-common ffmpeg
+```
+
+Install `audible-cli` to enable the Audible import feature and run the
+quickstart to authenticate:
+
+```bash
+pip install audible-cli
+audible quickstart
 ```
 
 Sadly debain distro bookworm does not provide the `python3-gpod` package, running
