@@ -92,6 +92,29 @@ curl -X POST -H "X-API-Key: <key>" -H "Content-Type: application/json" \
 
 The response lists the filenames that were downloaded.
 
+### `POST /youtube`
+Download a YouTube video and queue the audio. Provide a JSON body containing
+`url` and an optional `category` field. The `category` may be `music`,
+`audiobook` or `podcast`.
+
+```bash
+curl -X POST -H "X-API-Key: <key>" -H "Content-Type: application/json" \
+     -d '{"url": "https://youtu.be/dQw4w9WgXcQ", "category": "music"}' \
+     http://<pi>:8000/youtube
+```
+
+### `POST /youtube/{category}`
+Download a YouTube video into the specified category. The request body must
+provide `url`.
+
+```bash
+curl -X POST -H "X-API-Key: <key>" -H "Content-Type: application/json" \
+     -d '{"url": "https://youtu.be/dQw4w9WgXcQ"}' \
+     http://<pi>:8000/youtube/podcast
+```
+
+The response contains the queued filename and category.
+
 ### `GET /stats`
 Return basic dashboard information such as track count, queue size and storage usage.
 

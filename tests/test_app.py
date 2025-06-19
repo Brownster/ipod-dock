@@ -196,3 +196,26 @@ def test_control_invalid(mock_ctl):
     response = client.post("/control/boom")
     assert response.status_code == 400
     mock_ctl.play_pause.assert_not_called()
+
+
+@mock.patch.object(app_module.youtube_downloader, "download_audio")
+def test_youtube_endpoint(mock_dl):
+    mock_dl.return_value = Path("sync_queue/music/song.mp3")
+    resp = client.post("/youtube", json={"url": "http://yt"})
+    assert resp.status_code == 200
+    assert resp.json() == {"queued": "song.mp3", "category": "music"}
+    mock_dl.assert_called_once_with("http://yt", "music")
+
+
+@mock.patch.object(app_module.youtube_downloader, "download_audio")
+def test_youtube_category_endpoint(mock_dl):
+    mock_dl.return_value = Path("sync_queue/podcast/ep.mp3")
+    resp = client.post("/youtube/podcast", json={"url": "http://yt"})
+    assert resp.status_code == 200
+    assert resp.json() == {"queued": "ep.mp3", "category": "podcast"}
+    mock_dl.assert_called_once_with("http://yt", "podcast")
+
+
+def test_youtube_missing_url():
+    resp = client.post("/youtube", json={})
+    assert resp.status_code == 400
