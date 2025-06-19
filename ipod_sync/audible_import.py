@@ -23,6 +23,26 @@ JOB_QUEUE: queue.Queue[tuple[str, str]] = queue.Queue()
 
 _worker_started = False
 
+# Authentication state
+IS_AUTHENTICATED = False
+
+
+def check_authentication() -> bool:
+    """Return True if audible-cli is authenticated."""
+    global IS_AUTHENTICATED
+    try:
+        result = subprocess.run(
+            ["audible", "profile", "list", "--json"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        profiles = json.loads(result.stdout)
+        IS_AUTHENTICATED = len(profiles) > 0
+    except Exception:
+        IS_AUTHENTICATED = False
+    return IS_AUTHENTICATED
+
 
 def check_dependencies() -> None:
     """Ensure ffmpeg and audible-cli are installed."""
