@@ -79,6 +79,41 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
+def test_mount_ipod_label_missing_auto_detect(mock_run, tmp_path):
+    mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
+    mount_point = tmp_path / "mnt"
+    status = tmp_path / "status"
+    device = tmp_path / "sdc1"
+    device.write_text("")
+
+    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
+         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+         mock.patch.object(utils, "wait_for_device", return_value=True), \
+         mock.patch.object(utils, "wait_for_label", side_effect=FileNotFoundError), \
+         mock.patch.object(utils, "detect_ipod_device", return_value=str(device)) as detect, \
+         mock.patch("os.geteuid", return_value=1000):
+        utils.mount_ipod(utils.IPOD_DEVICE)
+        detect.assert_called_once()
+        mock_run.assert_called_with(
+            [
+                "sudo",
+                "--non-interactive",
+                "--",
+                utils.MOUNT_BIN,
+                "-t",
+                "vfat",
+                "--",
+                str(device),
+                str(mount_point),
+            ],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+
+@mock.patch("ipod_sync.utils.subprocess.run")
 def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
     mock_run.return_value = subprocess.CompletedProcess([], 0, "", "")
     mount_point = tmp_path / "mnt"

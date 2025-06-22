@@ -21,7 +21,7 @@ from .utils import mount_ipod, eject_ipod
 logger = logging.getLogger(__name__)
 
 
-def sync_queue(device: str = config.IPOD_DEVICE) -> None:
+def sync_queue(device: str | None = None) -> None:
     """Process all files waiting in the sync queue.
 
     Parameters
@@ -66,8 +66,8 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Sync queued files to an iPod")
     parser.add_argument(
         "--device",
-        default=config.IPOD_DEVICE,
-        help="Path to iPod block device (default: %(default)s)",
+        default=None,
+        help="Path to iPod block device",
     )
     args = parser.parse_args(argv)
 

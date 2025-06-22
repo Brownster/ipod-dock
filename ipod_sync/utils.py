@@ -137,8 +137,9 @@ def mount_ipod(device: str | None = None) -> None:
     if str(device) == str(IPOD_DEVICE):
         try:
             device = str(wait_for_label())
-        except FileNotFoundError as exc:
-            raise RuntimeError(str(exc)) from exc
+        except FileNotFoundError:
+            logger.debug("Label device not found; attempting auto-detection")
+            device = detect_ipod_device()
 
     wait_for_device(device)
 
