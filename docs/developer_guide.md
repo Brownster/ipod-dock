@@ -34,6 +34,10 @@ script also installs other tools like `automake`.
 
 ## Running the services
 
+A udev rule installs `ipod-mount.service` which mounts the iPod automatically
+when it is connected. The helper script detects the first FAT partition and
+mounts it at `/opt/ipod-dock/mnt/ipod`.
+
 Start the API server:
 
 ```bash
@@ -49,8 +53,9 @@ python -m ipod_sync.watcher
 You can also run a manual sync at any time:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
+python -m ipod_sync.sync_from_queue
 ```
+Add ``--device /dev/sdX2`` if you need to override the detected partition.
 
 Set environment variables to override defaults:
 
