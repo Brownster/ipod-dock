@@ -29,7 +29,7 @@ def _should_ignore(path: str) -> bool:
 class QueueEventHandler(FileSystemEventHandler):
     """Handle filesystem events from the sync queue."""
 
-    def __init__(self, device: str, dry_run: bool = False) -> None:
+    def __init__(self, device: str | None = None, dry_run: bool = False) -> None:
         super().__init__()
         self.device = device
         self.dry_run = dry_run
@@ -60,7 +60,7 @@ class QueueEventHandler(FileSystemEventHandler):
             self._process(event.src_path)
 
 
-def watch(queue_dir: Path, device: str, dry_run: bool = False) -> None:
+def watch(queue_dir: Path, device: str | None = None, dry_run: bool = False) -> None:
     """Start watching *queue_dir* for new files."""
     queue_dir = Path(queue_dir)
     queue_dir.mkdir(parents=True, exist_ok=True)
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--device",
-        default=config.IPOD_DEVICE,
+        default=None,
         help="Path to iPod block device",
     )
     parser.add_argument(

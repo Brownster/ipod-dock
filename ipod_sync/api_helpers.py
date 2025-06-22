@@ -79,7 +79,7 @@ def save_to_queue(
     return dest
 
 
-def get_tracks(device: str = config.IPOD_DEVICE) -> list[dict]:
+def get_tracks(device: str | None = None) -> list[dict]:
     """Mount the iPod and return a list of track metadata."""
     mount_ipod(device)
     try:
@@ -88,7 +88,7 @@ def get_tracks(device: str = config.IPOD_DEVICE) -> list[dict]:
         eject_ipod()
 
 
-def get_playlists(device: str = config.IPOD_DEVICE) -> list[dict]:
+def get_playlists(device: str | None = None) -> list[dict]:
     """Mount the iPod and return a list of playlists."""
     mount_ipod(device)
     try:
@@ -97,7 +97,7 @@ def get_playlists(device: str = config.IPOD_DEVICE) -> list[dict]:
         eject_ipod()
 
 
-def remove_track(db_id: str, device: str = config.IPOD_DEVICE) -> None:
+def remove_track(db_id: str, device: str | None = None) -> None:
     """Delete a track from the iPod by its database ID."""
     mount_ipod(device)
     try:
@@ -106,7 +106,7 @@ def remove_track(db_id: str, device: str = config.IPOD_DEVICE) -> None:
         eject_ipod()
 
 
-def create_new_playlist(name: str, track_ids: list[str], device: str = config.IPOD_DEVICE) -> None:
+def create_new_playlist(name: str, track_ids: list[str], device: str | None = None) -> None:
     """Create a playlist with ``track_ids`` on the iPod."""
     mount_ipod(device)
     try:
@@ -140,7 +140,7 @@ def clear_queue(queue_dir: Path | None = None) -> None:
             path.unlink()
 
 
-def get_stats(device: str = config.IPOD_DEVICE, queue_dir: Path | None = None) -> dict:
+def get_stats(device: str | None = None, queue_dir: Path | None = None) -> dict:
     """Return basic statistics for the web UI."""
     tracks = get_tracks(device)
     queue_files = list_queue(queue_dir)
