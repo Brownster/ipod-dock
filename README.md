@@ -209,6 +209,11 @@ the server for development with:
 python -m ipod_sync.app
 ```
 
+When running under a systemd service there is no interactive terminal
+available for Audible authentication.  Set the environment variable
+`IPOD_SKIP_AUDIBLE_AUTH=1` to skip the authentication prompts and start the
+web server immediately.  `ipod-api.service` exports this variable by default.
+
 With the server running, navigate to `http://localhost:8000/` (or use the Pi's
 address) to use the HTML dashboard for uploads and track browsing.
 
