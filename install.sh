@@ -69,20 +69,15 @@ fi
 # Ensure service user can access the project directory
 sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$PROJECT_DIR"
 
-# Ensure the iPod mount point exists and the user can mount the device
-IPOD_DEVICE="/dev/disk/by-label/IPOD"
+# Ensure the iPod mount point exists and is writable by the service user
 MOUNT_POINT="$TARGET_DIR/mnt/ipod"
 sudo mkdir -p "$MOUNT_POINT"
 sudo chown "$SERVICE_USER":"$SERVICE_USER" "$MOUNT_POINT"
-if ! grep -qs "${MOUNT_POINT}" /etc/fstab; then
-    echo "Adding $IPOD_DEVICE mount entry to /etc/fstab..."
-    echo "$IPOD_DEVICE $MOUNT_POINT vfat noauto,user,uid=$SERVICE_USER,gid=$SERVICE_USER 0 0" | sudo tee -a /etc/fstab
-fi
 
 # Allow the service account to mount and unmount without a password
 SUDOERS_FILE="/etc/sudoers.d/ipod-dock"
 SUDO_RULE="${SERVICE_USER} ALL=(root) NOPASSWD: \\
-    /bin/mount -t vfat ${IPOD_DEVICE} ${MOUNT_POINT}, \\
+    /bin/mount -t vfat \* ${MOUNT_POINT}, \\
     /bin/umount ${MOUNT_POINT}"
 if [ ! -f "$SUDOERS_FILE" ]; then
     echo "Adding sudoers rule for $SERVICE_USER at $SUDOERS_FILE"
