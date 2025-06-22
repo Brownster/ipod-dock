@@ -6,7 +6,9 @@ working on the project.
 ## Mount helpers
 
 `ipod_sync.utils` provides small wrappers for mounting and ejecting the iPod.
-They call the system `mount`, `umount` and `eject` commands using Python's
+A udev rule triggers `ipod-mount.service` which runs `ipod-mount.sh` to mount
+the first FAT partition automatically when the iPod is connected. The helpers
+call the system `mount`, `umount` and `eject` commands using Python's
 `subprocess` module and log any output for debugging. The helpers are:
 
 - `mount_ipod(device: str)` – mounts the given block device to the configured
@@ -61,11 +63,9 @@ default files are removed from the queue after a successful import.
 Run the script manually with:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
+python -m ipod_sync.sync_from_queue
 ```
-
-The `--device` argument may be omitted if your iPod is available at the default
-path configured in `config.IPOD_DEVICE`.
+Add ``--device /dev/sdX2`` to override the detected partition if needed.
 
 ## Logging
 

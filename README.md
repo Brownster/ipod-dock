@@ -102,28 +102,28 @@ mount.
 ### Running unprivileged
 
 If you keep ``ipod-listener`` as a non-root service, ``install.sh`` adds the
-required sudoers rule automatically. The entry looks like this (replace
-``ipodsvc`` with your service user if adding manually):
+required sudoers rule automatically. The entry allows `ipod-mount.sh` to mount
+the iPod when triggered by udev. Replace ``ipodsvc`` with your service user if
+adding manually:
 
 ```
 ipodsvc ALL=(root) NOPASSWD: \
-    /bin/mount -t vfat /dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod, \
+    /usr/local/bin/ipod-mount.sh, \
     /bin/umount /opt/ipod-dock/mnt/ipod
 ```
 
 The listener auto-detects when it is not running as uid 0 and silently prefixes
 those commands with ``sudo --non-interactive --``.
 
-Label the iPod's FAT partition once with:
+The mount helper auto-detects the iPod's FAT partition so labeling is
+optional. If you want to set a label for clarity:
 
 ```bash
 sudo fatlabel /dev/sdX2 IPOD
 ```
 
-The listener service attempts to detect the correct FAT partition
-automatically when the iPod is connected.  You can override the detected
-device by passing ``--device`` to the scripts or updating
-``config.IPOD_DEVICE``.
+You can override the detected device by passing ``--device`` to the scripts
+or updating ``config.IPOD_DEVICE``.
 
 To manually mount the device you can run:
 
@@ -184,8 +184,9 @@ During the early development phase queued files can be synced manually using the
 `sync_from_queue` module:
 
 ```bash
-python -m ipod_sync.sync_from_queue --device /dev/disk/by-label/IPOD
+python -m ipod_sync.sync_from_queue
 ```
+Add ``--device /dev/sdX2`` if you need to override the detected partition.
 
 Any audio files placed in the `sync_queue/` directory will be imported to the
 iPod and removed from the queue. Files using formats the iPod cannot play are
