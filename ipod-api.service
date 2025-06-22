@@ -9,6 +9,7 @@ ExecStart=/opt/ipod-dock/.venv/bin/python -m ipod_sync.app
 Restart=on-failure
 User=ipod
 Environment=PYTHONUNBUFFERED=1
+Environment=IPOD_SKIP_AUDIBLE_AUTH=1
 
 [Install]
 WantedBy=multi-user.target

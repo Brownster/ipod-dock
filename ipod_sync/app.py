@@ -280,14 +280,23 @@ async def control(cmd: str) -> dict:
 
 def main() -> None:
     """Run a development server if executed as a script."""
+    import os
+    import sys
     import uvicorn
 
     setup_logging()
 
+    interactive = sys.stdin.isatty()
+    skip_auth = os.environ.get("IPOD_SKIP_AUDIBLE_AUTH") == "1" or not interactive
+
     print("=" * 60)
     print("Checking Audible Authentication Status...")
     authenticated = audible_import.check_authentication()
-    while not authenticated:
+
+    if skip_auth:
+        if not authenticated:
+            logger.warning("Audible authentication not detected; starting anyway")
+    while not authenticated and not skip_auth:
         print("\n[!] Audible authentication is required.")
         print("    Please follow the prompts from 'audible-cli' to log in.")
         print("    This will likely open a browser window.")
@@ -302,7 +311,8 @@ def main() -> None:
         authenticated = audible_import.check_authentication()
         if not authenticated:
             print("[!] Authentication still not detected. Please try again.")
-    print("\n[\u2713] Audible is authenticated.")
+    if authenticated:
+        print("\n[\u2713] Audible is authenticated.")
     print("=" * 60)
     uvicorn.run("ipod_sync.app:app", host="0.0.0.0", port=8000, log_level="info")
 
