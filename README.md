@@ -89,15 +89,10 @@ The services run under the dedicated `ipod` account. `install.sh` now installs
 a `udev` rule and `ipod-mount.service` so the iPod's data partition is
 mounted automatically when connected. The service detects the first FAT
 partition and mounts it at `/opt/ipod-dock/mnt/ipod` using appropriate
-`uid`, `gid` and `umask` options so the `ipod` user has access. If you prefer
-manual control the script also adds an `/etc/fstab` entry so the `ipod` user
-can mount the device without privileges. Adjust the device path in `/etc/fstab`
-if needed; the default entry looks like:
-
-```
-
-/dev/disk/by-label/IPOD /opt/ipod-dock/mnt/ipod vfat noauto,user,uid=ipod,gid=ipod 0 0
-```
+`uid`, `gid` and `umask` options so the `ipod` user has access. Mounting is
+performed via a sudoers rule so the service can invoke `mount` without a
+password. If you prefer manual control you may add an `/etc/fstab` entry
+yourself so the `ipod` user can mount the device without sudo.
 
 If you prefer, remove the ``User=`` line from ``*.service`` files so they run
 as ``root`` instead of granting mount permissions. Either approach works; the
@@ -130,7 +125,7 @@ automatically when the iPod is connected.  You can override the detected
 device by passing ``--device`` to the scripts or updating
 ``config.IPOD_DEVICE``.
 
-After updating `fstab` you can test with:
+To manually mount the device you can run:
 
 ```bash
 sudo -u ipod mount /opt/ipod-dock/mnt/ipod
