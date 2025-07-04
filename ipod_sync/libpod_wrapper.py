@@ -70,11 +70,18 @@ def add_track(filepath: Path) -> str | None:
     db = _get_db()
     try:
         logger.info("Importing %s", filepath)
-        track = db.new_Track(filename=str(filepath))
-        track.copy_to_ipod()
-        db.add(track)
+        track = db.new_track(str(filepath))
+        if hasattr(track, 'copy_to_ipod'):
+            track.copy_to_ipod()
+        db.add_track(track)
         db.copy_delayed_files()
-        return track['dbid']
+        db_id = getattr(track, 'dbid', None)
+        if db_id is None and hasattr(track, '__getitem__'):
+            try:
+                db_id = track['dbid']
+            except Exception:
+                db_id = None
+        return db_id
     except GpodException as exc:
         logger.error("gpod error adding track %s: %s", filepath, exc)
         raise LibpodError(f"Failed to add track {filepath.name}: {exc}") from exc
@@ -88,16 +95,27 @@ def delete_track(db_id: str) -> None:
     try:
         logger.info("Deleting track %s", db_id)
         target = None
-        master = db.get_master()
+        if hasattr(db, 'get_master'):
+            master = db.get_master()
+        else:
+            master = getattr(db, 'tracks', [])
         for track in list(master):
-            if str(track['dbid']) == str(db_id):
+            tid = None
+            if hasattr(track, '__getitem__'):
+                try:
+                    tid = track['dbid']
+                except Exception:
+                    tid = None
+            if tid is None:
+                tid = getattr(track, 'dbid', None)
+            if str(tid) == str(db_id):
                 target = track
                 break
 
         if target is None:
             raise KeyError(f"Track {db_id!r} not found")
 
-        db.remove(target)
+        db.remove_track(target)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error deleting track %s: %s", db_id, exc)
@@ -112,16 +130,29 @@ def list_tracks() -> list[dict]:
     try:
         logger.debug("Listing tracks from iPod")
         tracks = []
-        master = db.get_master()
+        if hasattr(db, 'get_master'):
+            master = db.get_master()
+        else:
+            master = getattr(db, 'tracks', [])
         for track in list(master):
-            tracks.append(
-                {
-                    "id": track['dbid'],
-                    "title": track['title'].decode('utf-8') if track['title'] else None,
-                    "artist": track['artist'].decode('utf-8') if track['artist'] else None,
-                    "album": track['album'].decode('utf-8') if track['album'] else None,
-                }
-            )
+            def _field(name):
+                if hasattr(track, '__getitem__'):
+                    try:
+                        val = track[name]
+                    except Exception:
+                        val = None
+                else:
+                    val = getattr(track, name, None)
+                if isinstance(val, bytes):
+                    val = val.decode('utf-8')
+                return val
+
+            tracks.append({
+                "id": str(_field('dbid')) if _field('dbid') is not None else None,
+                "title": _field('title'),
+                "artist": _field('artist'),
+                "album": _field('album'),
+            })
         return tracks
     except GpodException as exc:
         raise LibpodError(f"Failed to list tracks: {exc}") from exc
@@ -135,15 +166,33 @@ def list_playlists() -> list[dict]:
     try:
         logger.debug("Listing playlists from iPod")
         playlists = []
-        for pl in db.get_playlists():
-            playlists.append(
-                {
-                    "name": pl.name.decode('utf-8') if pl.name else None,
-                    "tracks": [
-                        str(t['dbid']) for t in list(pl)
-                    ],
-                }
-            )
+        playlists_src = db.get_playlists() if hasattr(db, 'get_playlists') else getattr(db, 'playlists', [])
+        for pl in playlists_src:
+            def _pl_field(obj, name):
+                if hasattr(obj, '__getitem__'):
+                    try:
+                        val = obj[name]
+                    except Exception:
+                        val = None
+                else:
+                    val = getattr(obj, name, None)
+                if isinstance(val, bytes):
+                    val = val.decode('utf-8')
+                return val
+
+            if hasattr(pl, '__iter__'):
+                tracks_src = list(pl)
+            else:
+                tracks_src = getattr(pl, 'tracks', [])
+            tracks = []
+            for t in tracks_src:
+                tid = _pl_field(t, 'dbid')
+                tracks.append(str(tid) if tid is not None else None)
+
+            playlists.append({
+                "name": _pl_field(pl, 'name'),
+                "tracks": tracks,
+            })
         return playlists
     except GpodException as exc:
         raise LibpodError(f"Failed to list playlists: {exc}") from exc
@@ -156,17 +205,43 @@ def create_playlist(name: str, track_ids: list[str]) -> None:
     db = _get_db()
     try:
         logger.info("Creating playlist %s", name)
-        playlist = db.new_Playlist()
-        playlist.name = name.encode('utf-8')
-        master = db.get_master()
-        id_map = {str(t['dbid']): t for t in list(master)}
+        if hasattr(db, 'new_playlist'):
+            try:
+                playlist = db.new_playlist(name)
+            except TypeError:
+                playlist = db.new_playlist()
+                if hasattr(playlist, 'name'):
+                    playlist.name = name.encode('utf-8')
+        else:
+            playlist = db.new_Playlist()
+            if hasattr(playlist, 'name'):
+                playlist.name = name.encode('utf-8')
+        if hasattr(db, 'get_master'):
+            master = db.get_master()
+        else:
+            master = getattr(db, 'tracks', [])
+        id_map = {}
+        for t in list(master):
+            tid = None
+            if hasattr(t, '__getitem__'):
+                try:
+                    tid = t['dbid']
+                except Exception:
+                    tid = None
+            if tid is None:
+                tid = getattr(t, 'dbid', None)
+            if tid is not None:
+                id_map[str(tid)] = t
 
         for tid in track_ids:
             track = id_map.get(str(tid))
             if track:
-                playlist.add(track)
+                if hasattr(playlist, 'add_track'):
+                    playlist.add_track(track)
+                else:
+                    playlist.add(track)
 
-        db.add(playlist)
+        db.add_playlist(playlist)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error creating playlist %s: %s", name, exc)

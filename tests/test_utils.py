@@ -131,6 +131,18 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
             [
                 mock.call(
                     [
+                        "findmnt",
+                        "-n",
+                        "-o",
+                        "SOURCE",
+                        str(mount_point),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ),
+                mock.call(
+                    [
                         "sudo",
                         "--non-interactive",
                         "--",

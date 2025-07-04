@@ -193,7 +193,14 @@ def mount_ipod(device: str | None = None) -> None:
         raise RuntimeError(f"{device} does not exist")
     try:
         _run(
-            ["/usr/local/bin/mount-ipod", str(device)],
+            [
+                MOUNT_BIN,
+                "-t",
+                "vfat",
+                "--",
+                str(device),
+                str(mount_point),
+            ],
             use_sudo=True,
             capture_output=True,
             text=True,
@@ -220,10 +227,23 @@ def eject_ipod() -> None:
 
     mount_point: Path = IPOD_MOUNT
     if os.path.ismount(mount_point):
+        device = str(mount_point)
+        try:
+            result = subprocess.run(
+                ["findmnt", "-n", "-o", "SOURCE", str(mount_point)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            dev = result.stdout.strip()
+            if dev:
+                device = dev
+        except Exception:
+            logger.debug("Failed to determine device for %s", mount_point, exc_info=True)
         logger.info("Unmounting %s", mount_point)
         _run(["umount", str(mount_point)], use_sudo=True, capture_output=True, text=True)
-        logger.info("Ejecting %s", mount_point)
-        _run(["eject", str(mount_point)], use_sudo=True, capture_output=True, text=True)
+        logger.info("Ejecting %s", device)
+        _run(["eject", device], use_sudo=True, capture_output=True, text=True)
     else:
         logger.debug("%s not mounted", mount_point)
     try:
