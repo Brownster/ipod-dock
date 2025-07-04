@@ -23,7 +23,7 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))
-        mock_run.assert_called_with(
+        mount_call = mock.call(
             [
                 "sudo",
                 "--non-interactive",
@@ -40,6 +40,7 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
             stderr=subprocess.PIPE,
             text=True,
         )
+        assert mount_call in mock_run.call_args_list
         assert mount_point.exists()
         assert status.read_text() == "true"
 
@@ -59,7 +60,7 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(utils.IPOD_DEVICE)
         wfl.assert_called_once()
-        mock_run.assert_called_with(
+        mount_call = mock.call(
             [
                 "sudo",
                 "--non-interactive",
@@ -76,6 +77,7 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
             stderr=subprocess.PIPE,
             text=True,
         )
+        assert mount_call in mock_run.call_args_list
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
@@ -94,7 +96,7 @@ def test_mount_ipod_label_missing_auto_detect(mock_run, tmp_path):
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(utils.IPOD_DEVICE)
         detect.assert_called_once()
-        mock_run.assert_called_with(
+        mount_call = mock.call(
             [
                 "sudo",
                 "--non-interactive",
@@ -111,6 +113,7 @@ def test_mount_ipod_label_missing_auto_detect(mock_run, tmp_path):
             stderr=subprocess.PIPE,
             text=True,
         )
+        assert mount_call in mock_run.call_args_list
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")

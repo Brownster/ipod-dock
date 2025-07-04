@@ -178,6 +178,33 @@ pip install -r requirements.txt
 
 This repository will use the virtual environment for any Python tools and future dependencies.
 
+### Creating the SysInfoExtended file
+
+`libgpod` requires an additional XML file named `SysInfoExtended` on the iPod
+to determine the device's Firewire ID. The `ipod-listener` service will run
+`ipod-read-sysinfo-extended` automatically when the iPod is first mounted and
+the file is missing. If you prefer to run the tool manually, follow these
+steps:
+
+1. Connect and mount the iPod so it is accessible at
+   `/opt/ipod-dock/mnt/ipod` (the `ipod-listener` service handles this
+   automatically).
+2. Identify the block device path (e.g. `/dev/sda`).
+3. Run:
+
+   ```bash
+   sudo ipod-read-sysinfo-extended /dev/sda /opt/ipod-dock/mnt/ipod
+   ```
+
+   Replace `/dev/sda` with the correct device path. Root privileges are usually
+   required.
+
+The command reads information from the iPod and writes
+`iPod_Control/Device/SysInfoExtended` on the device. Creating this file once is
+enough for `libgpod` to update the iTunes database correctly. Verify the file
+exists before proceeding. See [docs/sysinfo.md](docs/sysinfo.md) for a more
+detailed walk-through.
+
 ## Updating
 
 Run `./update.sh` from the same project directory used during installation to refresh the copy under `/opt/ipod-dock`.
