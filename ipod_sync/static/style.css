@@ -185,28 +185,6 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.tabs {
-    display: flex;
-    margin-bottom: 25px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 5px;
-}
-
-.tab {
-    flex: 1;
-    padding: 12px 20px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.tab.active {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
 
 .search-bar {
     width: 100%;
