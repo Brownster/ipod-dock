@@ -19,12 +19,15 @@ class FakeTrack:
 
 
 class FakePlaylist:
-    def __init__(self, name):
+    def __init__(self, name=b""):
         self.name = name
         self.tracks = []
 
     def add_track(self, track):
         self.tracks.append(track)
+
+    def add(self, track):
+        self.add_track(track)
 
 
 class FakeDatabase:
@@ -32,20 +35,30 @@ class FakeDatabase:
         self.tracks = []
         self.playlists = []
         self.new_track_called_with = None
-        self.new_playlist_called_with = None
+        self.new_playlist_called = False
         self.copy_called = False
         self.closed = False
 
-    def new_track(self, path):
-        self.new_track_called_with = path
-        return FakeTrack(path)
+    def new_Track(self, filename=None):
+        self.new_track_called_with = filename
+        return FakeTrack(filename)
 
-    def add_track(self, track):
-        self.tracks.append(track)
+    new_track = new_Track
 
-    def new_playlist(self, name):
-        self.new_playlist_called_with = name
-        return FakePlaylist(name)
+    def add(self, obj):
+        if isinstance(obj, FakeTrack):
+            self.tracks.append(obj)
+        elif isinstance(obj, FakePlaylist):
+            self.playlists.append(obj)
+
+    add_track = add
+
+    def new_Playlist(self):
+        self.new_playlist_called = True
+        pl = FakePlaylist()
+        return pl
+
+    new_playlist = new_Playlist
 
     def add_playlist(self, playlist):
         self.playlists.append(playlist)
@@ -56,8 +69,13 @@ class FakeDatabase:
     def close(self):
         self.closed = True
 
-    def remove_track(self, track):
-        self.tracks.remove(track)
+    def remove(self, obj):
+        if isinstance(obj, FakeTrack):
+            self.tracks.remove(obj)
+        elif isinstance(obj, FakePlaylist):
+            self.playlists.remove(obj)
+
+    remove_track = remove
 
 
 class FakeGpod:
@@ -164,7 +182,8 @@ def test_create_playlist(tmp_path):
     with mock.patch.object(wrapper, "gpod", fake), \
          mock.patch.object(wrapper, "IPOD_MOUNT", mount):
         wrapper.create_playlist("MyList", ["1"])
-        assert fake.db.new_playlist_called_with == "MyList"
+        assert fake.db.new_playlist_called
+        assert fake.db.playlists[0].name == b"MyList"
         assert fake.db.playlists[0].tracks == [track]
         assert fake.db.copy_called
         assert fake.db.closed
