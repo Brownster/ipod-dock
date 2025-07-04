@@ -41,8 +41,8 @@ sudo apt-get install libgpod-common
 
 If `python3-gpod` isn't packaged on your system, the `install.sh` script will
 download and build the bindings from the
-[`john8675309/libgpod-0.8.3`](https://github.com/john8675309/libgpod-0.8.3)
-fork and install required build tools such as `automake`.
+[`gerion0/libgpod`](https://github.com/gerion0/libgpod) fork, which uses the
+Meson build system.
 
 The module exposes three simple helpers:
 

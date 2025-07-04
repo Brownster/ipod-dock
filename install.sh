@@ -17,22 +17,17 @@ cd "$PROJECT_DIR"
 
 build_libgpod() {
     echo "Building libgpod from source..."
-    sudo apt-get install -y build-essential git libtool intltool gtk-doc-tools \
-        autoconf automake \
+    sudo apt-get install -y build-essential git meson ninja-build \
+        swig libtool intltool gtk-doc-tools \
         libglib2.0-dev libimobiledevice-dev libplist-dev libxml2-dev \
-        python3-dev libsqlite3-dev
+        libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev
+
     workdir=$(mktemp -d)
-    git clone --depth 1 https://github.com/john8675309/libgpod-0.8.3.git "$workdir/libgpod"
+    git clone --depth 1 https://github.com/gerion0/libgpod.git "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
-    export AUTOMAKE=automake
-    export ACLOCAL=aclocal
-    pcdir=$(pkg-config --variable=pcfiledir libplist-2.0 2>/dev/null || true)
-    if [ -n "$pcdir" ] && [ ! -e "$pcdir/libplist.pc" ] && [ -e "$pcdir/libplist-2.0.pc" ]; then
-        sudo ln -s "$pcdir/libplist-2.0.pc" "$pcdir/libplist.pc"
-    fi
-    ./configure --with-python=/usr/bin/python3
-    make
-    sudo make install
+    meson setup build --prefix=/usr
+    ninja -C build
+    sudo ninja -C build install
     sudo ldconfig
     popd >/dev/null
     rm -rf "$workdir"
