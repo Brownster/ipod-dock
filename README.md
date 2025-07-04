@@ -152,7 +152,7 @@ audible quickstart
 
 Sadly debain distro bookworm does not provide the `python3-gpod` package.
 `install.sh` will build the libgpod bindings from the
-[`gerion0/libgpod`](https://github.com/gerion0/libgpod) fork, which uses Meson
+[`Brownster/libgpod`](https://github.com/Brownster/libgpod) fork, which uses Meson
 and includes Python 3 support. This requires the SQLite development headers,
 libxml2 development files, `python-gi-dev` and the `python3-mutagen` module.
 Install the prerequisites with:
