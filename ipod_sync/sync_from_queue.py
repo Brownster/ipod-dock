@@ -14,6 +14,7 @@ from . import config
 from .logging_setup import setup_logging
 from .libpod_wrapper import add_track, LibpodError
 from . import converter
+from .utils import mount_ipod, eject_ipod
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ def sync_queue(mount_point: str) -> None:
     if not files:
         logger.info("No files to sync in %s", queue)
         return
+
+    mount_ipod(mount_point)
 
     logger.info("Starting sync to %s", mount_point)
     for file in files:
@@ -54,14 +57,17 @@ def sync_queue(mount_point: str) -> None:
         except LibpodError as exc:
             logger.error("Failed to sync %s: %s", file, exc)
         except Exception as exc:  # pragma: no cover - unexpected failures
-            logger.error("An unexpected error occurred while syncing %s: %s", file, exc)
+            logger.error("Failed to sync %s: %s", file, exc)
     logger.info("Sync finished")
+    eject_ipod()
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Sync queued files to an iPod")
     parser.add_argument(
-        "mount_point",
+        "--device",
+        dest="mount_point",
+        default=str(config.IPOD_MOUNT),
         help="Path to iPod mount point",
     )
     args = parser.parse_args(argv)

@@ -25,7 +25,8 @@ try:  # pragma: no cover - the import will be mocked in tests
     GpodException = gpod.GpodException
 except (ImportError, AttributeError):  # pragma: no cover - handled at runtime
     gpod = None
-    GpodException = None  # type: ignore
+    class GpodException(Exception):
+        pass
     logger.debug("python-gpod bindings not available")
 
 
