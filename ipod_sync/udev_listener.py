@@ -13,6 +13,7 @@ import pyudev
 from . import config
 from .logging_setup import setup_logging
 from .sync_from_queue import sync_queue
+from . import utils
 from pathlib import Path
 
 # Path used to indicate connection status to other components
@@ -95,6 +96,7 @@ def _set_connected(connected: bool) -> None:
 
 
 def listen(
+    device: str | None = None,
     vendor: str = "05ac",
     product: str = "1209",
     monitor: Iterable[Tuple[str, pyudev.Device]] | None = None,
@@ -115,17 +117,14 @@ def listen(
             serial = dev.get("ID_SERIAL_SHORT", "unknown")
             logger.debug("Event %s for %s", action, serial)
 
-            if action == "add" and dev.device_type == "usb_device":
-                partition = find_ipod_partition(dev)
-                if partition and mount_partition(partition, uid, gid):
-                    logger.info("iPod %s attached", serial)
-                    _set_connected(True)
-                    try:
-                        sync_queue(MOUNT_POINT)
-                    except Exception as exc:  # pragma: no cover - runtime errors
-                        logger.error("Failed to sync: %s", exc)
-                else:
-                    logger.error("Could not find or mount iPod partition.")
+            if action == "add" and dev.device_type in {"usb_device", "partition"}:
+                target = device or dev.device_node
+                logger.info("iPod %s attached", serial)
+                _set_connected(True)
+                try:
+                    sync_queue(target)
+                except Exception as exc:  # pragma: no cover - runtime errors
+                    logger.error("Failed to sync: %s", exc)
 
             elif action == "remove" and dev.device_type == "usb_device":
                 logger.info("iPod %s removed", serial)
@@ -135,12 +134,13 @@ def listen(
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Listen for iPod USB events")
+    parser.add_argument("--device", help="iPod mount point")
     parser.add_argument("--vendor", default="05ac", help="USB vendor ID")
     parser.add_argument("--product", default="1209", help="USB product ID")
     args = parser.parse_args(argv)
 
     setup_logging()
-    listen(args.vendor, args.product)
+    listen(args.device, args.vendor, args.product)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution
