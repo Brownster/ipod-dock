@@ -29,8 +29,9 @@ sudo apt-get install libgpod-common ffmpeg
 If the `python3-gpod` package is missing, run `../install.sh` to build the
 libgpod bindings from the [`gerion0/libgpod`](https://github.com/gerion0/libgpod)
 fork with Python 3 support. The build uses Meson and requires the SQLite
-development headers (`libsqlite3-dev`) and the libxml2 development package
-(`libxml2-dev`).
+development headers (`libsqlite3-dev`), the libxml2 development package
+(`libxml2-dev`), the PyGObject development files (`python-gi-dev`) and the
+`python3-mutagen` module.
 
 ## Running the services
 
