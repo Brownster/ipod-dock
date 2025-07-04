@@ -85,8 +85,10 @@ sudo chown "$SERVICE_USER":"$SERVICE_USER" "$MOUNT_POINT"
 # Allow the service account to mount and unmount without a password
 SUDOERS_FILE="/etc/sudoers.d/ipod-dock"
 SUDO_RULE="${SERVICE_USER} ALL=(root) NOPASSWD: \\
+    /bin/mount -t vfat -- \* ${MOUNT_POINT}, \\
     /bin/mount -t vfat \* ${MOUNT_POINT}, \\
-    /bin/umount ${MOUNT_POINT}"
+    /bin/umount ${MOUNT_POINT}, \\
+    /usr/bin/eject ${MOUNT_POINT}"
 if [ ! -f "$SUDOERS_FILE" ]; then
     echo "Adding sudoers rule for $SERVICE_USER at $SUDOERS_FILE"
     echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" >/dev/null
@@ -104,4 +106,34 @@ if command -v systemctl >/dev/null; then
     sudo systemctl enable ipod-api.service ipod-watcher.service ipod-listener.service
     echo "Services installed. Start them with:\n  sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service"
 fi
+
+# Test the installation
+echo "Testing installation..."
+if [ -d "$PROJECT_DIR/.venv" ]; then
+    echo "✓ Virtual environment created"
+else
+    echo "✗ Virtual environment missing"
+fi
+
+if [ -f "$SUDOERS_FILE" ]; then
+    echo "✓ Sudoers rule installed"
+else
+    echo "✗ Sudoers rule missing"
+fi
+
+if [ -d "$PROJECT_DIR/.venv/lib/python3.11/site-packages/gpod" ]; then
+    echo "✓ gpod Python bindings linked"
+else
+    echo "✗ gpod Python bindings not linked"
+fi
+
+if id "$SERVICE_USER" >/dev/null 2>&1; then
+    echo "✓ Service user '$SERVICE_USER' exists"
+else
+    echo "✗ Service user '$SERVICE_USER' missing"
+fi
+
+echo "Installation complete!"
+echo "To start services: sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service"
+echo "Web UI will be available at: http://$(hostname -I | awk '{print $1}'):8000"
 
