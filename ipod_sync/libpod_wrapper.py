@@ -22,8 +22,8 @@ class LibpodError(Exception):
 try:  # pragma: no cover - the import will be mocked in tests
     import gpod  # type: ignore
 
-    GpodException = gpod.GpodException
-except (ImportError, AttributeError):  # pragma: no cover - handled at runtime
+    GpodException = gpod.DatabaseException
+except ImportError:  # pragma: no cover - handled at runtime
     gpod = None
     class GpodException(Exception):
         pass
