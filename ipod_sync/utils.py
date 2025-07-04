@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import subprocess
 import json
 import shutil
@@ -119,6 +120,40 @@ def detect_ipod_device() -> str:
     return IPOD_DEVICE
 
 
+def _ensure_sysinfo(device: str, mount_point: Path) -> None:
+    """Create the ``SysInfoExtended`` file if missing."""
+
+    sysinfo_path = mount_point / "iPod_Control" / "Device" / "SysInfoExtended"
+    if sysinfo_path.exists():
+        return
+
+    tool = shutil.which("ipod-read-sysinfo-extended")
+    if not tool:
+        logger.debug("ipod-read-sysinfo-extended not found")
+        return
+
+    base_device = device
+    try:
+        result = subprocess.run(
+            ["lsblk", "-no", "PKNAME", device],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        name = result.stdout.strip()
+        if name:
+            base_device = f"/dev/{name}"
+    except Exception:
+        base_device = re.sub(r"\d+$", "", str(device))
+
+    try:
+        _run([tool, base_device, str(mount_point)], use_sudo=True, capture_output=True, text=True)
+        if sysinfo_path.exists():
+            logger.info("Created SysInfoExtended at %s", sysinfo_path)
+    except subprocess.CalledProcessError as exc:
+        logger.error("Failed to create SysInfoExtended: %s", exc.stderr or exc)
+
+
 def mount_ipod(device: str | None = None) -> None:
     """Mount the iPod ``device`` to :data:`~ipod_sync.config.IPOD_MOUNT`.
 
@@ -150,6 +185,7 @@ def mount_ipod(device: str | None = None) -> None:
             Path(IPOD_STATUS_FILE).write_text("true")
         except Exception:
             logger.debug("Failed to update status file", exc_info=True)
+        _ensure_sysinfo(device, mount_point)
         return
     mount_point.mkdir(parents=True, exist_ok=True)
     logger.info("Mounting %s at %s", device, mount_point)
@@ -174,6 +210,8 @@ def mount_ipod(device: str | None = None) -> None:
         Path(IPOD_STATUS_FILE).write_text("true")
     except Exception:  # pragma: no cover - filesystem errors
         logger.debug("Failed to update status file", exc_info=True)
+
+    _ensure_sysinfo(device, mount_point)
 
 
 def eject_ipod() -> None:
