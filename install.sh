@@ -16,17 +16,19 @@ fi
 cd "$PROJECT_DIR"
 
 build_libgpod() {
-    echo "Building libgpod from source..."
+    echo "Building libgpod from source with sgutils support..."
     sudo apt-get install -y build-essential git meson ninja-build \
         swig libtool intltool gtk-doc-tools \
         libglib2.0-dev libimobiledevice-dev libplist-dev libxml2-dev \
         libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev \
-        python-gi-dev python3-mutagen
+        python-gi-dev python3-mutagen libsgutils2-dev sg3-utils
 
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/Brownster/libgpod.git "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
-    meson setup build --prefix=/usr
+    
+    # Configure with sgutils support explicitly enabled
+    meson setup build --prefix=/usr -Dsgutils=enabled
     ninja -C build
     sudo ninja -C build install
     sudo ldconfig
@@ -82,13 +84,29 @@ MOUNT_POINT="$TARGET_DIR/mnt/ipod"
 sudo mkdir -p "$MOUNT_POINT"
 sudo chown "$SERVICE_USER":"$SERVICE_USER" "$MOUNT_POINT"
 
+# Create mount helper script with proper ownership for iPod mounting
+MOUNT_HELPER="/usr/local/bin/mount-ipod"
+if [ ! -f "$MOUNT_HELPER" ]; then
+    echo "Creating mount helper script at $MOUNT_HELPER"
+    sudo tee "$MOUNT_HELPER" << 'EOF' >/dev/null
+#!/bin/bash
+# Helper script to mount iPod with correct permissions
+SERVICE_USER_ID=$(id -u ipod)
+SERVICE_GROUP_ID=$(id -g ipod)
+/bin/mount -t vfat -o "uid=${SERVICE_USER_ID},gid=${SERVICE_GROUP_ID}" -- "$1" /opt/ipod-dock/mnt/ipod
+EOF
+    sudo chmod 755 "$MOUNT_HELPER"
+fi
+
 # Allow the service account to mount and unmount without a password
 SUDOERS_FILE="/etc/sudoers.d/ipod-dock"
 SUDO_RULE="${SERVICE_USER} ALL=(root) NOPASSWD: \\
+    /usr/local/bin/mount-ipod \*, \\
     /bin/mount -t vfat -- \* ${MOUNT_POINT}, \\
     /bin/mount -t vfat \* ${MOUNT_POINT}, \\
     /bin/umount ${MOUNT_POINT}, \\
-    /usr/bin/eject ${MOUNT_POINT}"
+    /usr/bin/eject ${MOUNT_POINT}, \\
+    /usr/bin/ipod-read-sysinfo-extended \* ${MOUNT_POINT}"
 if [ ! -f "$SUDOERS_FILE" ]; then
     echo "Adding sudoers rule for $SERVICE_USER at $SUDOERS_FILE"
     echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" >/dev/null
