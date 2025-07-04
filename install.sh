@@ -20,7 +20,8 @@ build_libgpod() {
     sudo apt-get install -y build-essential git meson ninja-build \
         swig libtool intltool gtk-doc-tools \
         libglib2.0-dev libimobiledevice-dev libplist-dev libxml2-dev \
-        libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev
+        libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev \
+        python-gi-dev python3-mutagen
 
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/gerion0/libgpod.git "$workdir/libgpod"

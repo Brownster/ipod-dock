@@ -42,7 +42,8 @@ sudo apt-get install libgpod-common
 If `python3-gpod` isn't packaged on your system, the `install.sh` script will
 download and build the bindings from the
 [`gerion0/libgpod`](https://github.com/gerion0/libgpod) fork, which uses the
-Meson build system.
+Meson build system. Ensure `python-gi-dev` and `python3-mutagen` are installed
+before running the build.
 
 The module exposes three simple helpers:
 
