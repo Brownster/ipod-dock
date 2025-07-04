@@ -53,7 +53,7 @@ source "$PROJECT_DIR/.venv/bin/activate"
 # Install Python packages
 pip install -U pip
 pip install -r "$PROJECT_DIR/requirements.txt"
-pip install audible-cli
+pip install audible-cli mutagen
 
 # Ensure dedicated service user exists
 # Create or update the service user
@@ -64,6 +64,18 @@ else
 fi
 # Ensure service user can access the project directory
 sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$PROJECT_DIR"
+
+# Fix gpod Python bindings path issue
+if [ -d "/usr/usr/lib/python3/dist-packages/gpod" ]; then
+    echo "Fixing gpod Python bindings path..."
+    sudo ln -sf /usr/usr/lib/python3/dist-packages/gpod /usr/lib/python3/dist-packages/gpod
+fi
+
+# Create gpod symlink in virtual environment
+if [ -d "/usr/lib/python3/dist-packages/gpod" ] && [ -d "$PROJECT_DIR/.venv/lib/python3.11/site-packages" ]; then
+    echo "Creating gpod symlink in virtual environment..."
+    sudo -u "$SERVICE_USER" ln -sf /usr/lib/python3/dist-packages/gpod "$PROJECT_DIR/.venv/lib/python3.11/site-packages/gpod"
+fi
 
 # Ensure the iPod mount point exists and is writable by the service user
 MOUNT_POINT="$TARGET_DIR/mnt/ipod"
