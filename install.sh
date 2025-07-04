@@ -24,7 +24,7 @@ build_libgpod() {
         python-gi-dev python3-mutagen
 
     workdir=$(mktemp -d)
-    git clone --depth 1 https://github.com/gerion0/libgpod.git "$workdir/libgpod"
+    git clone --depth 1 https://github.com/Brownster/libgpod.git "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
     meson setup build --prefix=/usr
     ninja -C build
