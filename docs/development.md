@@ -6,10 +6,10 @@ working on the project.
 ## Mount helpers
 
 `ipod_sync.utils` provides small wrappers for mounting and ejecting the iPod.
-A udev rule triggers `ipod-mount.service` which runs `ipod-mount.sh` to mount
-the first FAT partition automatically when the iPod is connected. The helpers
-call the system `mount`, `umount` and `eject` commands using Python's
-`subprocess` module and log any output for debugging. The helpers are:
+`ipod-listener.service` handles USB events and automatically mounts the first
+FAT partition when the iPod is connected. The helpers call the system `mount`,
+`umount` and `eject` commands using Python's `subprocess` module and log any
+output for debugging. The helpers are:
 
 - `mount_ipod(device: str)` – mounts the given block device to the configured
   `IPOD_MOUNT` directory.

@@ -83,14 +83,11 @@ fi
 
 # Install systemd services if available
 if command -v systemctl >/dev/null; then
-    for svc in ipod-api.service ipod-watcher.service ipod-listener.service ipod-mount.service; do
+    for svc in ipod-api.service ipod-watcher.service ipod-listener.service; do
         tmp=$(mktemp)
         sed "s|User=.*|User=$SERVICE_USER|" "$PROJECT_DIR/$svc" > "$tmp" 2>/dev/null || cp "$PROJECT_DIR/$svc" "$tmp"
         sudo mv "$tmp" "/etc/systemd/system/$svc"
     done
-    sudo install -m 0755 "$PROJECT_DIR/ipod-mount.sh" /usr/local/bin/ipod-mount.sh
-    sudo install -m 0644 "$PROJECT_DIR/90-ipod.rules" /etc/udev/rules.d/90-ipod.rules
-    sudo udevadm control --reload-rules
     sudo systemctl daemon-reload
     sudo systemctl enable ipod-api.service ipod-watcher.service ipod-listener.service
     echo "Services installed. Start them with:\n  sudo systemctl start ipod-api.service ipod-watcher.service ipod-listener.service"
