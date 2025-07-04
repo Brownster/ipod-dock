@@ -103,8 +103,19 @@ async function handleFiles(files) {
 
 function switchTab(tab, element) {
     currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
     element.classList.add('active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show', 'active'));
+    const pane = document.getElementById(`${tab}-pane`);
+    if (pane) pane.classList.add('show', 'active');
+
+    const tracksArea = document.getElementById('tracks-area');
+    if (tab === 'audiobooks') {
+        tracksArea.style.display = 'none';
+    } else {
+        tracksArea.style.display = 'block';
+    }
+
     updateUploadPrompt();
     loadTracks();
 }
@@ -288,6 +299,20 @@ async function syncNow() {
 async function clearQueue() {
     await authFetch('/queue/clear', { method: 'POST' });
     showNotification('Queue cleared', 'success');
+    await updateStats();
+    if (currentTab === 'queue') loadTracks();
+}
+
+async function fetchPodcasts() {
+    const feedUrl = document.getElementById('podcast-feed-url').value.trim();
+    if (!feedUrl) return;
+    await authFetch('/podcasts/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feed_url: feedUrl })
+    });
+    document.getElementById('podcast-feed-url').value = '';
+    showNotification('Podcast download queued', 'success');
     await updateStats();
     if (currentTab === 'queue') loadTracks();
 }
