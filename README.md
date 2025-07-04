@@ -67,6 +67,12 @@ systemd service units. Run it from the project root:
 ./install.sh
 ```
 
+After the installer completes you can verify the `python-gpod` bindings by running:
+
+```bash
+./test_bindings.sh
+```
+
 Or of you prefer this will get the job done
 
 ```bash
