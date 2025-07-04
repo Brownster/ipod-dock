@@ -70,10 +70,22 @@ def add_track(filepath: Path) -> str | None:
     db = _get_db()
     try:
         logger.info("Importing %s", filepath)
-        track = db.new_track(str(filepath))
-        if hasattr(track, 'copy_to_ipod'):
+        if hasattr(db, "new_Track"):
+            track = db.new_Track(filename=str(filepath))
+        elif hasattr(db, "new_track"):
+            track = db.new_track(str(filepath))
+        elif hasattr(gpod, "Track"):
+            track = gpod.Track(filename=str(filepath))
+        else:
+            raise LibpodError("No supported track creation method found")
+
+        if hasattr(track, "copy_to_ipod"):
             track.copy_to_ipod()
-        db.add_track(track)
+
+        if hasattr(db, "add"):
+            db.add(track)
+        else:
+            db.add_track(track)
         db.copy_delayed_files()
         db_id = getattr(track, 'dbid', None)
         if db_id is None and hasattr(track, '__getitem__'):
@@ -115,7 +127,10 @@ def delete_track(db_id: str) -> None:
         if target is None:
             raise KeyError(f"Track {db_id!r} not found")
 
-        db.remove_track(target)
+        if hasattr(db, "remove"):
+            db.remove(target)
+        else:
+            db.remove_track(target)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error deleting track %s: %s", db_id, exc)
@@ -205,17 +220,19 @@ def create_playlist(name: str, track_ids: list[str]) -> None:
     db = _get_db()
     try:
         logger.info("Creating playlist %s", name)
-        if hasattr(db, 'new_playlist'):
+        if hasattr(db, "new_Playlist"):
+            playlist = db.new_Playlist()
+            if hasattr(playlist, "name"):
+                playlist.name = name.encode("utf-8")
+        elif hasattr(db, "new_playlist"):
             try:
                 playlist = db.new_playlist(name)
             except TypeError:
                 playlist = db.new_playlist()
-                if hasattr(playlist, 'name'):
-                    playlist.name = name.encode('utf-8')
+                if hasattr(playlist, "name"):
+                    playlist.name = name.encode("utf-8")
         else:
-            playlist = db.new_Playlist()
-            if hasattr(playlist, 'name'):
-                playlist.name = name.encode('utf-8')
+            raise LibpodError("No supported playlist creation method found")
         if hasattr(db, 'get_master'):
             master = db.get_master()
         else:
@@ -236,12 +253,14 @@ def create_playlist(name: str, track_ids: list[str]) -> None:
         for tid in track_ids:
             track = id_map.get(str(tid))
             if track:
-                if hasattr(playlist, 'add_track'):
-                    playlist.add_track(track)
-                else:
+                if hasattr(playlist, "add"):
                     playlist.add(track)
-
-        db.add_playlist(playlist)
+                else:
+                    playlist.add_track(track)
+        if hasattr(db, "add"):
+            db.add(playlist)
+        else:
+            db.add_playlist(playlist)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error creating playlist %s: %s", name, exc)
