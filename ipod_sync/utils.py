@@ -193,7 +193,7 @@ def mount_ipod(device: str | None = None) -> None:
         raise RuntimeError(f"{device} does not exist")
     try:
         _run(
-            [MOUNT_BIN, "-t", "vfat", "--", str(device), str(mount_point)],
+            ["/usr/local/bin/mount-ipod", str(device)],
             use_sudo=True,
             capture_output=True,
             text=True,
