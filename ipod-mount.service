@@ -1,9 +1,0 @@
-[Unit]
-Description=Mount iPod Data Partition
-After=systemd-udevd.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/ipod-mount.sh
-
-
