@@ -70,10 +70,11 @@ def add_track(filepath: Path) -> str | None:
     db = _get_db()
     try:
         logger.info("Importing %s", filepath)
-        track = db.new_track(str(filepath))
-        db.add_track(track)
+        track = db.new_Track(filename=str(filepath))
+        track.copy_to_ipod()
+        db.add(track)
         db.copy_delayed_files()
-        return getattr(track, "dbid", None)
+        return track['dbid']
     except GpodException as exc:
         logger.error("gpod error adding track %s: %s", filepath, exc)
         raise LibpodError(f"Failed to add track {filepath.name}: {exc}") from exc
@@ -87,15 +88,16 @@ def delete_track(db_id: str) -> None:
     try:
         logger.info("Deleting track %s", db_id)
         target = None
-        for track in list(getattr(db, "tracks", [])):
-            if str(getattr(track, "dbid", "")) == str(db_id):
+        master = db.get_master()
+        for track in list(master):
+            if str(track['dbid']) == str(db_id):
                 target = track
                 break
 
         if target is None:
             raise KeyError(f"Track {db_id!r} not found")
 
-        db.remove_track(target)
+        db.remove(target)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error deleting track %s: %s", db_id, exc)
@@ -110,13 +112,14 @@ def list_tracks() -> list[dict]:
     try:
         logger.debug("Listing tracks from iPod")
         tracks = []
-        for track in getattr(db, "tracks", []):
+        master = db.get_master()
+        for track in list(master):
             tracks.append(
                 {
-                    "id": getattr(track, "dbid", None),
-                    "title": getattr(track, "title", None),
-                    "artist": getattr(track, "artist", None),
-                    "album": getattr(track, "album", None),
+                    "id": track['dbid'],
+                    "title": track['title'].decode('utf-8') if track['title'] else None,
+                    "artist": track['artist'].decode('utf-8') if track['artist'] else None,
+                    "album": track['album'].decode('utf-8') if track['album'] else None,
                 }
             )
         return tracks
@@ -132,12 +135,12 @@ def list_playlists() -> list[dict]:
     try:
         logger.debug("Listing playlists from iPod")
         playlists = []
-        for pl in getattr(db, "playlists", []):
+        for pl in db.get_playlists():
             playlists.append(
                 {
-                    "name": getattr(pl, "name", None),
+                    "name": pl.name.decode('utf-8') if pl.name else None,
                     "tracks": [
-                        str(getattr(t, "dbid", "")) for t in getattr(pl, "tracks", [])
+                        str(t['dbid']) for t in list(pl)
                     ],
                 }
             )
@@ -153,15 +156,17 @@ def create_playlist(name: str, track_ids: list[str]) -> None:
     db = _get_db()
     try:
         logger.info("Creating playlist %s", name)
-        playlist = db.new_playlist(name)
-        id_map = {str(getattr(t, "dbid", "")): t for t in getattr(db, "tracks", [])}
+        playlist = db.new_Playlist()
+        playlist.name = name.encode('utf-8')
+        master = db.get_master()
+        id_map = {str(t['dbid']): t for t in list(master)}
 
         for tid in track_ids:
             track = id_map.get(str(tid))
             if track:
-                playlist.add_track(track)
+                playlist.add(track)
 
-        db.add_playlist(playlist)
+        db.add(playlist)
         db.copy_delayed_files()
     except GpodException as exc:
         logger.error("gpod error creating playlist %s: %s", name, exc)
