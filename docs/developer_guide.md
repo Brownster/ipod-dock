@@ -35,9 +35,9 @@ development headers (`libsqlite3-dev`), the libxml2 development package
 
 ## Running the services
 
-A udev rule installs `ipod-mount.service` which mounts the iPod automatically
-when it is connected. The helper script detects the first FAT partition and
-mounts it at `/opt/ipod-dock/mnt/ipod`.
+`ipod-listener.service` monitors USB events and mounts the iPod automatically
+when it is connected. The listener detects the first FAT partition and mounts it
+at `/opt/ipod-dock/mnt/ipod`.
 
 Start the API server:
 
