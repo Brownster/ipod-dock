@@ -9,14 +9,17 @@ from datetime import datetime
 from pathlib import Path
 
 from . import Repository, PlaylistRepository, Track, Playlist, TrackStatus
+from .base_repository import EventEmittingRepository
+from ..events import EventType
 from .. import config
 
 logger = logging.getLogger(__name__)
 
-class IpodRepository(Repository, PlaylistRepository):
+class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
     """Repository for iPod data using libgpod."""
     
     def __init__(self, device_path: str = None):
+        EventEmittingRepository.__init__(self, "IpodRepository")
         self.device_path = device_path or config.IPOD_DEVICE
         self._itdb = None
     
@@ -144,7 +147,19 @@ class IpodRepository(Repository, PlaylistRepository):
             self._itdb.copy_track_to_ipod(gpod_track, track.file_path)
         
         self._itdb.add(gpod_track)
-        return str(gpod_track.dbid)
+        track_id = str(gpod_track.dbid)
+
+        self._emit_track_event(
+            EventType.TRACK_ADDED,
+            track_id,
+            {
+                "title": track.title,
+                "artist": track.artist,
+                "category": track.category,
+            },
+        )
+
+        return track_id
     
     def update_track(self, track: Track) -> bool:
         """Update an existing track."""

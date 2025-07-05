@@ -8,12 +8,15 @@ import mimetypes
 import mutagen
 
 from . import Repository, Track, TrackStatus
+from .base_repository import EventEmittingRepository
+from ..events import EventType
 from .. import config
 
-class QueueRepository(Repository):
+class QueueRepository(Repository, EventEmittingRepository):
     """Repository for sync queue files."""
     
     def __init__(self, queue_dir: Path = None):
+        EventEmittingRepository.__init__(self, "QueueRepository")
         self.queue_dir = queue_dir or config.SYNC_QUEUE_DIR
         self.queue_dir.mkdir(parents=True, exist_ok=True)
         
@@ -217,7 +220,18 @@ class QueueRepository(Repository):
             **((track.metadata or {}))
         }
         self._save_metadata(metadata)
-        
+
+        # Emit event
+        self._emit_track_event(
+            EventType.QUEUE_UPDATED,
+            file_id,
+            {
+                "title": track.title,
+                "category": track.category,
+                "action": "added",
+            },
+        )
+
         return file_id
     
     def update_track(self, track: Track) -> bool:
@@ -253,7 +267,14 @@ class QueueRepository(Repository):
             if track_id in metadata:
                 del metadata[track_id]
                 self._save_metadata(metadata)
-            
+
+            # Emit event
+            self._emit_track_event(
+                EventType.QUEUE_UPDATED,
+                track_id,
+                {"action": "removed"},
+            )
+
             return True
             
         except Exception:
