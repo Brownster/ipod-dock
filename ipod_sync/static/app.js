@@ -116,6 +116,16 @@ function switchTab(tab, element) {
         tracksArea.style.display = 'block';
     }
 
+    // Show/hide playlist controls based on tab
+    const playlistControls = document.getElementById('playlist-controls');
+    if (playlistControls) {
+        if (tab === 'music' || tab === 'playlists') {
+            playlistControls.style.display = 'block';
+        } else {
+            playlistControls.style.display = 'none';
+        }
+    }
+
     updateUploadPrompt();
     loadTracks();
 }
@@ -143,14 +153,16 @@ async function loadTracks() {
         filteredTracks.map(track => `
             <div class="track-item ${track.type || ''}">
                 <input type="checkbox" class="select-box" onchange="toggleTrack('${track.id}', this)" ${selectedTracks.has(String(track.id)) ? 'checked' : ''}>
-                <div class="track-title">${track.title || ''}</div>
-                <div class="track-meta">
-                    <span>${track.artist || ''} • ${track.album || ''}</span>
-                    <span>${track.duration || ''}</span>
+                <div class="track-info">
+                    <div class="track-title">${track.title || ''}</div>
+                    <div class="track-meta">
+                        <span>${track.artist || ''} • ${track.album || ''}</span>
+                        <span>${track.duration || ''}</span>
+                    </div>
                 </div>
                 <div class="track-actions">
-                    <button class="btn btn-small" onclick="playTrack('${track.id}')">▶️ Play</button>
-                    <button class="btn btn-small btn-secondary" onclick="removeTrack('${track.id}')">🗑️ Remove</button>
+                    <button class="btn btn-small" onclick="playTrack('${track.id}')">▶️</button>
+                    <button class="btn btn-small btn-secondary" onclick="removeTrack('${track.id}')">🗑️</button>
                 </div>
             </div>
         `).join('');
@@ -164,10 +176,12 @@ async function loadQueue() {
         '<div style="text-align: center; color: #666; padding: 40px;">No files in queue</div>' :
         items.map(file => `
             <div class="track-item">
-                <div class="track-title">${file.name}</div>
-                <div class="track-meta">
-                    <span>Size: ${(file.size / 1024 / 1024).toFixed(1)} MB</span>
-                    <span>Pending upload</span>
+                <div class="track-info">
+                    <div class="track-title">${file.name}</div>
+                    <div class="track-meta">
+                        <span>Size: ${(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                        <span>Pending upload</span>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -181,9 +195,11 @@ async function loadPlaylists() {
         '<div style="text-align: center; color: #666; padding: 40px;">No playlists</div>' :
         pls.map(pl => `
             <div class="track-item">
-                <div class="track-title">${pl.name}</div>
-                <div class="track-meta">
-                    <span>${pl.tracks.length} tracks</span>
+                <div class="track-info">
+                    <div class="track-title">${pl.name}</div>
+                    <div class="track-meta">
+                        <span>${pl.tracks.length} tracks</span>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -194,6 +210,14 @@ function toggleTrack(id, cb) {
         selectedTracks.add(String(id));
     } else {
         selectedTracks.delete(String(id));
+    }
+    updateSelectionUI();
+}
+
+function updateSelectionUI() {
+    const selectedCount = document.getElementById('selected-count');
+    if (selectedCount) {
+        selectedCount.textContent = selectedTracks.size;
     }
 }
 
@@ -214,6 +238,7 @@ async function createPlaylist(name, ids) {
         body: JSON.stringify({ name: name, tracks: ids })
     });
     selectedTracks.clear();
+    updateSelectionUI();
     if (currentTab === 'playlists') loadTracks();
     showNotification('Playlist created', 'success');
 }
@@ -229,14 +254,16 @@ function handleSearch() {
     grid.innerHTML = filteredTracks.map(track => `
         <div class="track-item ${track.type || ''}">
             <input type="checkbox" class="select-box" onchange="toggleTrack('${track.id}', this)" ${selectedTracks.has(String(track.id)) ? 'checked' : ''}>
-            <div class="track-title">${track.title || ''}</div>
-            <div class="track-meta">
-                <span>${track.artist || ''} • ${track.album || ''}</span>
-                <span>${track.duration || ''}</span>
+            <div class="track-info">
+                <div class="track-title">${track.title || ''}</div>
+                <div class="track-meta">
+                    <span>${track.artist || ''} • ${track.album || ''}</span>
+                    <span>${track.duration || ''}</span>
+                </div>
             </div>
             <div class="track-actions">
-                <button class="btn btn-small" onclick="playTrack('${track.id}')">▶️ Play</button>
-                <button class="btn btn-small btn-secondary" onclick="removeTrack('${track.id}')">🗑️ Remove</button>
+                <button class="btn btn-small" onclick="playTrack('${track.id}')">▶️</button>
+                <button class="btn btn-small btn-secondary" onclick="removeTrack('${track.id}')">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -327,7 +354,6 @@ async function removeTrack(id) {
     await loadTracks();
     await updateStats();
 }
-
 
 async function sendControl(cmd) {
     await authFetch('/control/' + cmd, { method: 'POST' });
