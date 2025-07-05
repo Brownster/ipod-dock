@@ -72,3 +72,4 @@ class MediaSourcePlugin(ABC):
     def validate_config(self, config: Dict[str, Any]) -> List[str]:
         """Validate plugin configuration. Return list of error messages."""
         return []
+

@@ -1,7 +1,12 @@
 """Tests for plugin system."""
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+import sys
+from pathlib import Path
 from typing import List, Dict, Any
+from unittest.mock import Mock, patch, MagicMock
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+import pytest
 
 from ipod_sync.plugins import MediaSourcePlugin, MediaItem, PluginStatus
 from ipod_sync.plugins.manager import PluginManager
@@ -170,3 +175,4 @@ class TestPluginStatus:
         assert PluginStatus.AVAILABLE.value == "available"
         assert PluginStatus.UNAVAILABLE.value == "unavailable"
         assert PluginStatus.ERROR.value == "error"
+
