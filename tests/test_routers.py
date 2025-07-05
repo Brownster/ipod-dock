@@ -45,6 +45,8 @@ class TestTracksRouter:
 
     def test_authentication_required(self):
         """Test that endpoints require authentication."""
-        response = client.get("/api/v1/tracks")
+        with patch('ipod_sync.config.API_KEY', 'secret'):
+            response = client.get("/api/v1/tracks")
+
         assert response.status_code == 401
 

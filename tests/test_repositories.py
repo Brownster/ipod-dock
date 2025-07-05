@@ -6,10 +6,20 @@ from pathlib import Path
 import tempfile
 import shutil
 import json
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from ipod_sync.repositories import Track, Playlist, TrackStatus, Repository, PlaylistRepository
 from ipod_sync.repositories.queue_repository import QueueRepository
-from ipod_sync.repositories.factory import RepositoryFactory, get_ipod_repo, get_queue_repo
+from ipod_sync.repositories.local_repository import LocalRepository
+from ipod_sync.repositories.factory import (
+    RepositoryFactory,
+    get_ipod_repo,
+    get_queue_repo,
+    get_local_repo,
+)
 
 class TestTrack:
     def test_track_creation(self):
@@ -244,6 +254,20 @@ class TestRepositoryFactory:
         
         queue_repo = get_queue_repo()
         assert isinstance(queue_repo, QueueRepository)
+
+    @patch('ipod_sync.repositories.factory.config')
+    def test_create_local_repository(self, mock_config):
+        mock_config.UPLOADS_DIR = Path("/tmp/library")
+
+        repo = RepositoryFactory.create_local_repository()
+        assert isinstance(repo, LocalRepository)
+
+    @patch('ipod_sync.repositories.factory.config')
+    def test_local_repo_helper(self, mock_config):
+        mock_config.UPLOADS_DIR = Path("/tmp/library")
+
+        repo = get_local_repo()
+        assert isinstance(repo, LocalRepository)
 
 class TestTrackStatus:
     def test_track_status_enum(self):

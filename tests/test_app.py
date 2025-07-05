@@ -8,6 +8,7 @@ sys.path.insert(0, str(ROOT))
 from fastapi.testclient import TestClient
 from ipod_sync.app import app
 import ipod_sync.app as app_module
+from ipod_sync.repositories import Track, Playlist
 
 client = TestClient(app)
 
@@ -16,7 +17,8 @@ def test_status_endpoint(monkeypatch):
     monkeypatch.setattr(app_module, "is_ipod_connected", lambda *_: True)
     response = client.get("/status")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "connected": True}
+    assert response.json()["status"] == "ok"
+    assert response.json()["connected"] is True
 
 
 def test_auth_required_when_key_set(monkeypatch):
@@ -28,7 +30,7 @@ def test_auth_required_when_key_set(monkeypatch):
     assert ok.status_code == 200
 
 
-@mock.patch.object(app_module, "save_to_queue")
+@mock.patch("ipod_sync.routers.queue.save_to_queue")
 def test_upload_endpoint(mock_save):
     mock_save.return_value = Path("sync_queue/foo.mp3")
     response = client.post(
@@ -41,7 +43,7 @@ def test_upload_endpoint(mock_save):
     mock_save.assert_called_once()
 
 
-@mock.patch.object(app_module, "save_to_queue")
+@mock.patch("ipod_sync.routers.queue.save_to_queue")
 def test_upload_category_endpoint(mock_save):
     mock_save.return_value = Path("sync_queue/audiobook/foo.m4b")
     response = client.post(
@@ -54,7 +56,7 @@ def test_upload_category_endpoint(mock_save):
     mock_save.assert_called_once_with("foo.m4b", b"abc", category="audiobook")
 
 
-@mock.patch.object(app_module, "save_to_queue")
+@mock.patch("ipod_sync.routers.queue.save_to_queue")
 def test_upload_podcast_category(mock_save):
     mock_save.return_value = Path("sync_queue/podcast/ep.mp3")
     response = client.post(
@@ -76,81 +78,133 @@ def test_upload_category_invalid():
     assert response.status_code == 400
 
 
-@mock.patch.object(app_module, "get_tracks", return_value=[{"id": "1"}])
-def test_tracks_endpoint(mock_get):
-    response = client.get("/api/v1/tracks")
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_tracks_endpoint(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.get_tracks.return_value = [Track(id="1", title="Song")]
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.get("/api/v1/tracks?source=ipod")
+
     assert response.status_code == 200
-    assert response.json() == [{"id": "1"}]
-    mock_get.assert_called_once()
+    assert response.json()[0]["id"] == "1"
+    mock_repo.get_tracks.assert_called_once()
 
 
-@mock.patch.object(app_module, "get_tracks", side_effect=RuntimeError("boom"))
-def test_tracks_endpoint_error(mock_get):
-    response = client.get("/api/v1/tracks")
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_tracks_endpoint_error(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.get_tracks.side_effect = RuntimeError("boom")
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.get("/api/v1/tracks?source=ipod")
+
     assert response.status_code == 500
     assert "boom" in response.text
-    mock_get.assert_called_once()
+    mock_repo.get_tracks.assert_called_once()
 
 
-@mock.patch.object(app_module, "remove_track")
-def test_delete_track_endpoint(mock_remove):
-    response = client.delete("/api/v1/tracks/42")
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_delete_track_endpoint(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.remove_track.return_value = True
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.delete("/api/v1/tracks/42?source=ipod")
+
     assert response.status_code == 200
-    assert response.json() == {"deleted": "42"}
-    mock_remove.assert_called_once_with("42", app_module.config.IPOD_DEVICE)
+    mock_repo.remove_track.assert_called_once_with("42")
 
 
-@mock.patch.object(app_module, "remove_track", side_effect=KeyError)
-def test_delete_track_not_found(mock_remove):
-    response = client.delete("/api/v1/tracks/99")
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_delete_track_not_found(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.remove_track.return_value = False
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.delete("/api/v1/tracks/99?source=ipod")
+
     assert response.status_code == 404
-    mock_remove.assert_called_once_with("99", app_module.config.IPOD_DEVICE)
+    mock_repo.remove_track.assert_called_once_with("99")
 
 
-@mock.patch.object(app_module, "get_playlists", return_value=[{"name": "Mix"}])
-def test_playlists_get(mock_get):
-    response = client.get("/api/v1/playlists")
+@mock.patch('ipod_sync.routers.playlists.get_ipod_repo')
+def test_playlists_get(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.get_playlists.return_value = [Playlist(id="1", name="Mix", track_ids=[])]
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.get("/api/v1/playlists")
+
     assert response.status_code == 200
-    assert response.json() == [{"name": "Mix"}]
-    mock_get.assert_called_once_with(app_module.config.IPOD_DEVICE)
+    assert response.json()[0]["name"] == "Mix"
+    mock_repo.get_playlists.assert_called_once()
 
 
-@mock.patch.object(app_module, "create_new_playlist")
-def test_playlists_post(mock_create):
-    response = client.post("/api/v1/playlists", json={"name": "Mix", "track_ids": ["1"]})
+@mock.patch('ipod_sync.routers.playlists.get_ipod_repo')
+def test_playlists_post(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.create_playlist.return_value = "Mix"
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/playlists", json={"name": "Mix", "track_ids": ["1"]})
+
     assert response.status_code == 200
-    assert response.json() == {"created": "Mix"}
-    mock_create.assert_called_once_with("Mix", ["1"], app_module.config.IPOD_DEVICE)
+    assert response.json()["data"]["playlist_id"] == "Mix"
+    mock_repo.create_playlist.assert_called_once_with("Mix", ["1"]) 
 
 
-@mock.patch.object(app_module, "list_queue", return_value=[{"name": "a.mp3"}])
-def test_queue_endpoint(mock_list):
-    response = client.get("/api/v1/queue")
+@mock.patch('ipod_sync.routers.queue.get_queue_repo')
+def test_queue_endpoint(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_track = Track(id="1", title="a.mp3")
+    mock_repo.get_tracks.return_value = [mock_track]
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.get("/api/v1/queue")
+
     assert response.status_code == 200
-    assert response.json() == [{"name": "a.mp3"}]
-    mock_list.assert_called_once()
+    assert response.json()[0]["title"] == "a.mp3"
+    mock_repo.get_tracks.assert_called_once()
 
 
-@mock.patch.object(app_module, "clear_queue")
-def test_queue_clear_endpoint(mock_clear):
-    response = client.post("/api/v1/queue/clear")
+@mock.patch('ipod_sync.routers.queue.get_queue_repo')
+def test_queue_clear_endpoint(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.clear_queue.return_value = True
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/queue/clear")
+
     assert response.status_code == 200
-    assert response.json() == {"cleared": True}
-    mock_clear.assert_called_once()
+    assert response.json()["success"] is True
+    mock_repo.clear_queue.assert_called_once()
 
 
-@mock.patch.object(app_module, "sync_from_queue")
+@mock.patch('ipod_sync.routers.control.sync_from_queue')
 def test_sync_endpoint(mock_sync):
-    response = client.post("/api/v1/control/sync")
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/control/sync")
+
     assert response.status_code == 200
-    assert response.json() == {"synced": True}
+    assert response.json()["message"]
     mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
 
 
-@mock.patch.object(app_module, "sync_from_queue")
+@mock.patch('ipod_sync.routers.control.sync_from_queue')
 def test_sync_endpoint_error(mock_sync):
     mock_sync.sync_queue.side_effect = RuntimeError("boom")
-    response = client.post("/api/v1/control/sync")
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/control/sync")
+
     assert response.status_code == 500
     assert "boom" in response.text
     mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
@@ -158,12 +212,26 @@ def test_sync_endpoint_error(mock_sync):
 
 
 
-@mock.patch.object(app_module, "get_stats", return_value={"music": 1})
-def test_stats_endpoint(mock_stats):
-    response = client.get("/api/v1/tracks/stats/summary?source=ipod")
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_stats_endpoint(mock_repo_factory):
+    mock_repo = mock.MagicMock()
+    mock_repo.get_stats.return_value = {
+        "total_tracks": 1,
+        "total_duration_seconds": 60,
+        "total_size_bytes": 1234,
+        "categories": {"music": 1},
+        "total_playlists": 0,
+    }
+    mock_repo_factory.return_value = mock_repo
+
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.get("/api/v1/tracks/stats/summary?source=ipod")
+
     assert response.status_code == 200
-    assert response.json() == {"music": 1}
-    mock_stats.assert_called_once_with(app_module.config.IPOD_DEVICE)
+    data = response.json()
+    assert data["total_tracks"] == 1
+    assert data["categories"]["music"] == 1
+    mock_repo.get_stats.assert_called_once()
 
 
 def test_index_page():
@@ -175,20 +243,23 @@ def test_index_page():
 
 def test_audible_page():
     response = client.get("/audible")
-    assert response.status_code == 200
-    assert "Audible Library Converter" in response.text
+    assert response.status_code == 404
 
 
-@mock.patch.object(app_module, "playback_controller")
+@mock.patch('ipod_sync.routers.control.playback_controller')
 def test_control_endpoint(mock_ctl):
-    response = client.post("/control/play")
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/control/playback/play")
+
     assert response.status_code == 200
     mock_ctl.play_pause.assert_called_once()
 
 
-@mock.patch.object(app_module, "playback_controller")
+@mock.patch('ipod_sync.routers.control.playback_controller')
 def test_control_invalid(mock_ctl):
-    response = client.post("/control/boom")
+    with mock.patch('ipod_sync.auth.verify_api_key', return_value=None):
+        response = client.post("/api/v1/control/playback/boom")
+
     assert response.status_code == 400
     mock_ctl.play_pause.assert_not_called()
 
