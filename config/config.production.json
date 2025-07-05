@@ -1,0 +1,13 @@
+{
+  "log_level": "WARNING",
+  "server": {
+    "host": "0.0.0.0",
+    "port": 80,
+    "cors_origins": ["https://yourdomain.com"]
+  },
+  "audio": {
+    "conversion_bitrate": 256,
+    "normalize_audio": true
+  },
+  "keep_local_copy": true
+}
