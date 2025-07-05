@@ -34,6 +34,16 @@ See [research.md](research.md) for notes on the hardware setup and [wiring instr
   track skipping.
 - **Rotating log files** stored under `logs/` for easy debugging.
 - **Systemd service units** so the API and watcher start automatically on boot.
+- **Plugin architecture** allows new media sources to be added via
+  `MediaSourcePlugin` classes.
+- **Repository pattern** unifies data access for the iPod, sync queue and local
+  files.
+- **Configuration manager** loads and validates settings from JSON with
+  environment overrides.
+- **Event bus** lets components react to actions like sync progress without
+  tight coupling.
+- **Modular API routers** keep the FastAPI endpoints organised under
+  `ipod_sync/routers`.
 
 ## Dock wiring
 
@@ -259,4 +269,6 @@ Plugin developers can find usage examples in
 Unit tests run automatically on GitHub Actions for every push and pull request. The workflow installs the required Python packages from `requirements.txt` and executes `pytest`.
 
 For a more detailed overview of the repository layout and development workflow
-see [docs/developer_guide.md](docs/developer_guide.md).
+see [docs/developer_guide.md](docs/developer_guide.md). The guide now
+includes notes on the plugin system, repository pattern, configuration manager
+and event bus introduced in tasks 1 to 5.
