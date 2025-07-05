@@ -23,6 +23,18 @@ build_libgpod() {
         libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev \
         python-gi-dev python3-mutagen libsgutils2-dev sg3-utils
 
+    # Debian packages the SCSI utils library as libsgutils2.so but
+    # the libgpod build looks for libsgutils.so. Create a symlink if
+    # needed so Meson can locate the library.
+    sgutils_path=$(ldconfig -p | awk '/libsgutils2\.so/ {print $NF; exit}')
+    if [ -n "$sgutils_path" ]; then
+        sgutils_dir=$(dirname "$sgutils_path")
+        if [ ! -e "$sgutils_dir/libsgutils.so" ]; then
+            echo "Creating libsgutils.so symlink in $sgutils_dir"
+            sudo ln -s "$(basename "$sgutils_path")" "$sgutils_dir/libsgutils.so"
+        fi
+    fi
+
     workdir=$(mktemp -d)
     git clone --depth 1 https://github.com/Brownster/libgpod.git "$workdir/libgpod"
     pushd "$workdir/libgpod" >/dev/null
