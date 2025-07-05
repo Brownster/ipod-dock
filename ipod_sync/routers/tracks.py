@@ -1,16 +1,22 @@
 """Tracks API router."""
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from fastapi.responses import JSONResponse
 
-from .models import TrackResponse, StatsResponse, ErrorResponse
+from .models import (
+    TrackResponse,
+    StatsResponse,
+    ErrorResponse,
+    UpdateTrackRequest,
+    SuccessResponse,
+)
 from ..repositories.factory import get_ipod_repo, get_queue_repo
 from ..repositories import Repository, Track
 from ..auth import verify_api_key
 
 router = APIRouter(prefix="/api/v1/tracks", tags=["tracks"])
 
-def get_track_repository(source: str = "ipod") -> Repository:
+def get_track_repository(source: str = Query("ipod", enum=["ipod", "queue"])) -> Repository:
     """Dependency to get track repository."""
     if source == "ipod":
         return get_ipod_repo()
@@ -64,9 +70,14 @@ async def get_tracks(
     except Exception as e:
         raise HTTPException(500, f"Failed to get tracks: {str(e)}")
 
-@router.get("/{track_id}", response_model=TrackResponse)
+@router.get(
+    "/{track_id}",
+    response_model=TrackResponse,
+    summary="Get track by ID",
+    responses={404: {"model": ErrorResponse}},
+)
 async def get_track(
-    track_id: str,
+    track_id: str = Path(..., description="Track identifier"),
     source: str = Query("ipod", enum=["ipod", "queue"]),
     repo: Repository = Depends(get_track_repository),
     _: None = Depends(verify_api_key)
@@ -83,6 +94,46 @@ async def get_track(
         raise
     except Exception as e:
         raise HTTPException(500, f"Failed to get track: {str(e)}")
+
+@router.put(
+    "/{track_id}",
+    response_model=SuccessResponse,
+    summary="Update track metadata",
+)
+async def update_track(
+    request: UpdateTrackRequest,
+    track_id: str = Path(..., description="Track identifier"),
+    source: str = Query("ipod", enum=["ipod", "queue"]),
+    repo: Repository = Depends(get_track_repository),
+    _: None = Depends(verify_api_key),
+):
+    """Update track metadata."""
+    try:
+        track = repo.get_track(track_id)
+        if not track:
+            raise HTTPException(404, "Track not found")
+
+        if request.title is not None:
+            track.title = request.title
+        if request.artist is not None:
+            track.artist = request.artist
+        if request.album is not None:
+            track.album = request.album
+        if request.genre is not None:
+            track.genre = request.genre
+        if request.rating is not None:
+            track.rating = request.rating
+
+        success = repo.update_track(track)
+        if not success:
+            raise HTTPException(500, "Failed to update track")
+
+        return SuccessResponse(message=f"Track '{track.title}' updated successfully")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Failed to update track: {str(e)}")
 
 @router.delete("/{track_id}")
 async def delete_track(
@@ -104,7 +155,11 @@ async def delete_track(
     except Exception as e:
         raise HTTPException(500, f"Failed to delete track: {str(e)}")
 
-@router.get("/stats", response_model=StatsResponse)
+@router.get(
+    "/stats/summary",
+    response_model=StatsResponse,
+    summary="Get track statistics",
+)
 async def get_track_stats(
     source: str = Query("ipod", enum=["ipod", "queue"]),
     repo: Repository = Depends(get_track_repository),
