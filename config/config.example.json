@@ -1,0 +1,41 @@
+{
+  "profile": "default",
+  "log_level": "INFO",
+  "keep_local_copy": false,
+  "audio": {
+    "supported_formats": [".mp3", ".m4a", ".m4b", ".aac", ".wav", ".flac"],
+    "conversion_format": "mp3",
+    "conversion_bitrate": 192,
+    "normalize_audio": false
+  },
+  "ipod": {
+    "device_path": "/dev/disk/by-label/IPOD",
+    "mount_point": "./mnt/ipod",
+    "auto_mount": true,
+    "auto_eject": true,
+    "create_sysinfo": true
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "api_key": null,
+    "cors_origins": ["*"],
+    "max_upload_size": 104857600
+  },
+  "serial": {
+    "port": "/dev/serial0",
+    "baudrate": 19200,
+    "timeout": 1.0,
+    "enabled": true
+  },
+  "plugin_configs": {
+    "audible": {
+      "download_format": "m4b",
+      "auto_download": false
+    },
+    "youtube": {
+      "quality": "best",
+      "extract_audio": true
+    }
+  }
+}

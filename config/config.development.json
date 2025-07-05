@@ -1,0 +1,13 @@
+{
+  "log_level": "DEBUG",
+  "server": {
+    "port": 8001
+  },
+  "serial": {
+    "enabled": false
+  },
+  "ipod": {
+    "auto_mount": false,
+    "device_path": "/tmp/fake_ipod"
+  }
+}
