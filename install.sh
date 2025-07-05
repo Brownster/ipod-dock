@@ -21,7 +21,8 @@ build_libgpod() {
         swig libtool intltool gtk-doc-tools \
         libglib2.0-dev libimobiledevice-dev libplist-dev libxml2-dev \
         libgdk-pixbuf2.0-dev python3-dev libsqlite3-dev \
-        python-gi-dev python3-mutagen libsgutils2-dev sg3-utils
+        python-gi-dev python3-mutagen libudev-dev libsgutils2-dev sg3-utils
+
 
     # Debian packages the SCSI utils library as libsgutils2.so but
     # the libgpod build looks for libsgutils.so. Create a symlink if
