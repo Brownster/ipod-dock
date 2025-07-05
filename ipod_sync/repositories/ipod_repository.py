@@ -1,5 +1,8 @@
 """iPod repository implementation using libgpod."""
-import gpod
+try:  # pragma: no cover - will be mocked in tests
+    import gpod  # type: ignore
+except Exception:  # pragma: no cover - missing optional dependency
+    gpod = None
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -20,6 +23,8 @@ class IpodRepository(Repository, PlaylistRepository):
     def _ensure_connected(self):
         """Ensure iPod database is loaded."""
         if self._itdb is None:
+            if gpod is None:
+                raise RuntimeError("python-gpod is not installed")
             mount_point = str(config.IPOD_MOUNT)
             try:
                 self._itdb = gpod.Database(mount_point)
