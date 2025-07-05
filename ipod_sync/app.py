@@ -7,6 +7,7 @@ import subprocess
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import HTMLResponse, FileResponse
+from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from importlib import resources
 
@@ -26,12 +27,23 @@ from .api_helpers import (
     is_ipod_connected,
 )
 from . import sync_from_queue, podcast_fetcher, audible_import
+from .plugins.manager import plugin_manager
+from .routers import plugins as plugins_router
+
+AUDIBLE_PLUGIN_ID = "audible"
 
 from . import youtube_downloader
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ipod-dock")
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Initialize the plugin manager."""
+    plugin_manager.discover_plugins()
+
+app.include_router(plugins_router.router)
 static_dir = resources.files("ipod_sync").joinpath("static")
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
@@ -57,20 +69,32 @@ async def audible_page() -> str:
 
 @app.get("/api/auth/status")
 async def auth_status() -> dict:
-    """Return whether audible-cli is authenticated."""
-    audible_import.check_authentication()
-    return {"authenticated": audible_import.IS_AUTHENTICATED}
+    """Return whether the Audible plugin is authenticated."""
+    plugin = plugin_manager.get_plugin(AUDIBLE_PLUGIN_ID)
+    return {"authenticated": plugin.is_authenticated()}
 
 
 @app.get("/api/library")
 async def audible_library() -> list[dict]:
-    """Return the user's Audible library."""
-    if not audible_import.IS_AUTHENTICATED:
+    """Return the user's Audible library via the plugin."""
+    plugin = plugin_manager.get_plugin(AUDIBLE_PLUGIN_ID)
+    if not plugin.is_authenticated():
         raise HTTPException(401, "Not authenticated")
     try:
-        return audible_import.fetch_library()
-    except subprocess.CalledProcessError as exc:
-        logger.error("Failed to fetch library: %s", exc.stderr)
+        items = plugin.fetch_library()
+        return [
+            {
+                "title": item.title,
+                "artist": item.artist,
+                "album": item.album,
+                "duration": item.duration,
+                "category": item.category,
+                "metadata": item.metadata or {},
+            }
+            for item in items
+        ]
+    except Exception as exc:
+        logger.error("Failed to fetch library: %s", exc)
         raise HTTPException(500, "Failed to fetch library")
 
 
@@ -80,15 +104,19 @@ async def audible_convert(payload: dict) -> dict:
     title = payload.get("title")
     if not asin or not title:
         raise HTTPException(400, "asin and title required")
-    if not audible_import.IS_AUTHENTICATED:
+
+    plugin = plugin_manager.get_plugin(AUDIBLE_PLUGIN_ID)
+    if not plugin.is_authenticated():
         raise HTTPException(401, "Not authenticated")
-    if asin in audible_import.JOBS and audible_import.JOBS[asin]["status"] in {
-        "queued",
-        "processing",
-    }:
-        return {"message": "Job is already in progress."}
-    audible_import.queue_conversion(asin, title)
-    return {"message": "Job queued successfully."}
+
+    try:
+        file_path = plugin.download_item(
+            asin, {"asin": asin, "title": title}
+        )
+        return {"file": Path(file_path).name}
+    except Exception as exc:
+        logger.error("Download failed: %s", exc)
+        raise HTTPException(500, "Download failed")
 
 
 @app.get("/api/status")
@@ -98,7 +126,7 @@ async def audible_status() -> dict:
 
 @app.get("/downloads/{filename}")
 async def audible_download(filename: str):
-    path = audible_import.DOWNLOADS_DIR / filename
+    path = (config.SYNC_QUEUE_DIR / "audiobook") / filename
     if not path.exists():
         raise HTTPException(404, "file not found")
     return FileResponse(
@@ -319,3 +347,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

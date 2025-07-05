@@ -139,12 +139,21 @@ class AudiblePlugin(MediaSourcePlugin):
                     "type": "string",
                     "enum": ["m4b", "mp3"],
                     "default": "m4b",
-                    "description": "Preferred download format"
+                    "description": "Preferred download format",
                 },
                 "auto_download": {
-                    "type": "boolean", 
+                    "type": "boolean",
                     "default": False,
-                    "description": "Automatically download new purchases"
-                }
-            }
+                    "description": "Automatically download new purchases",
+                },
+            },
         }
+
+    def validate_config(self, config: Dict[str, Any]) -> List[str]:
+        """Validate plugin configuration and return a list of errors."""
+        errors: List[str] = []
+        fmt = config.get("download_format")
+        if fmt and fmt not in {"m4b", "mp3"}:
+            errors.append("download_format must be 'm4b' or 'mp3'")
+        return errors
+

@@ -195,3 +195,4 @@ async def execute_plugin_action(
         raise HTTPException(404, str(e))
     except Exception as e:
         raise HTTPException(500, f"Failed to execute plugin action: {str(e)}")
+

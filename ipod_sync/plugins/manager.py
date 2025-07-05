@@ -1,7 +1,7 @@
 """Plugin manager for loading and managing media source plugins."""
 import importlib
 import pkgutil
-from typing import Dict, List, Type
+from typing import Any, Dict, List, Type
 import logging
 from pathlib import Path
 
@@ -110,3 +110,4 @@ class PluginManager:
 
 # Global plugin manager instance
 plugin_manager = PluginManager()
+
