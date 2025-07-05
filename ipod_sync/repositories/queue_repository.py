@@ -319,6 +319,18 @@ class QueueRepository(Repository, EventEmittingRepository):
             "categories": categories
         }
     
+    def save_to_queue(self, name: str, data: bytes, category: str | None = None) -> Path:
+        """Save uploaded file data to the sync queue directory."""
+        queue = self.queue_dir
+        if category:
+            queue = queue / category
+        queue.mkdir(parents=True, exist_ok=True)
+        dest = queue / name
+        with dest.open("wb") as fh:
+            fh.write(data)
+        logger.info("Saved %s to queue", dest)
+        return dest
+
     def clear_queue(self) -> bool:
         """Remove all tracks from queue."""
         try:

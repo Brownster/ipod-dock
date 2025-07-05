@@ -12,7 +12,8 @@ from pathlib import Path
 
 from . import config
 from .logging_setup import setup_logging
-from .libpod_wrapper import add_track, LibpodError
+from .repositories.factory import get_ipod_repo
+from .repositories import Track
 from . import converter
 from .utils import mount_ipod, eject_ipod
 
@@ -40,8 +41,10 @@ def sync_queue(mount_point: str) -> None:
     logger.info("Starting sync to %s", mount_point)
     for file in files:
         try:
+            repo = get_ipod_repo(mount_point)
             to_sync = converter.prepare_for_sync(file)
-            track_id = add_track(to_sync)
+            track = Track(title=to_sync.stem, file_path=str(to_sync))
+            track_id = repo.add_track(track)
             size = to_sync.stat().st_size
             logger.info(
                 "Synced %s (%d bytes) track_id=%s",
@@ -54,9 +57,7 @@ def sync_queue(mount_point: str) -> None:
                 if to_sync != file:
                     to_sync.unlink(missing_ok=True)
                 logger.debug("Deleted %s", file)
-        except LibpodError as exc:
-            logger.error("Failed to sync %s: %s", file, exc)
-        except Exception as exc:  # pragma: no cover - unexpected failures
+        except Exception as exc:
             logger.error("Failed to sync %s: %s", file, exc)
     logger.info("Sync finished")
     eject_ipod()

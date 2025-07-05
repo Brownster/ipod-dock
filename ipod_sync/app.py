@@ -17,18 +17,6 @@ from .plugins.manager import plugin_manager
 from .logging_setup import setup_logging
 from . import config
 
-# Re-export commonly used helpers for backward compatibility
-from .api_helpers import (
-    is_ipod_connected,
-    save_to_queue,
-    list_queue,
-    clear_queue,
-    get_tracks,
-    remove_track,
-    get_playlists,
-    create_new_playlist,
-    get_stats,
-)
 from . import sync_from_queue
 from .routers.control import playback_controller
 
@@ -122,19 +110,7 @@ async def health_check():
     }
 
 
-# Legacy endpoint for backward compatibility
 from .auth import verify_api_key
-
-
-@app.get("/status")
-async def legacy_status(_: None = Depends(verify_api_key)):
-    """Legacy status endpoint - redirects to new API."""
-    connected = is_ipod_connected(config.IPOD_DEVICE)
-    return {
-        "status": "ok",
-        "connected": connected,
-        "message": "This endpoint is deprecated. Use /api/v1/control/status instead.",
-    }
 
 
 def main() -> None:

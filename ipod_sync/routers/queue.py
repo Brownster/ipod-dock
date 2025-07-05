@@ -4,9 +4,8 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 
 from .models import TrackResponse, SuccessResponse
 from ..repositories.factory import get_queue_repo
-from ..repositories import Repository, Track
+from ..repositories import Repository, Track, QueueRepository
 from ..auth import verify_api_key
-from ..api_helpers import save_to_queue
 
 router = APIRouter(prefix="/api/v1/queue", tags=["queue"])
 
@@ -50,6 +49,7 @@ async def get_queue(
 async def upload_to_queue(
     file: UploadFile = File(...),
     category: str = "music",
+    repo: QueueRepository = Depends(get_queue_repository),
     _: None = Depends(verify_api_key)
 ):
     """Upload a file to the sync queue."""
@@ -58,7 +58,7 @@ async def upload_to_queue(
             raise HTTPException(400, "Invalid category")
         
         data = await file.read()
-        path = save_to_queue(file.filename, data, category=category)
+        path = repo.save_to_queue(file.filename, data, category=category)
         
         return {"success": True, "queued": path.name, "category": category}
         

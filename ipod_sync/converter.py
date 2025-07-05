@@ -6,14 +6,14 @@ import logging
 import subprocess
 from pathlib import Path
 
-from .config import SUPPORTED_FORMATS
+from . import config
 
 logger = logging.getLogger(__name__)
 
 
 def needs_conversion(path: Path) -> bool:
     """Return ``True`` if *path* requires conversion."""
-    return path.suffix.lower() not in SUPPORTED_FORMATS
+    return path.suffix.lower() not in config.SUPPORTED_FORMATS
 
 
 def convert_audio(src: Path, dest: Path) -> None:

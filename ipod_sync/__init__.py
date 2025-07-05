@@ -1,10 +1,8 @@
 """Core package for the ipod-dock project."""
 
 __all__ = [
-    "api_helpers",
     "app",
     "config",
-    "libpod_wrapper",
     "playback",
     "utils",
     "sync_from_queue",
@@ -14,7 +12,6 @@ __all__ = [
     "converter",
     "logging_setup",
     "aap_controller",
-    "audible_import",
     "templates",
 ]
 

@@ -17,7 +17,7 @@ import shlex
 from typing import Any
 from pathlib import Path
 
-from .config import IPOD_MOUNT, IPOD_DEVICE, IPOD_STATUS_FILE
+from . import config
 import time
 
 LABEL_PATH = Path("/dev/disk/by-label/IPOD")
@@ -117,7 +117,7 @@ def detect_ipod_device() -> str:
     except Exception:  # pragma: no cover - system command may fail
         logger.debug("Failed to detect iPod device", exc_info=True)
 
-    return IPOD_DEVICE
+    return config.IPOD_DEVICE
 
 
 def _ensure_sysinfo(device: str, mount_point: Path) -> None:
@@ -155,7 +155,7 @@ def _ensure_sysinfo(device: str, mount_point: Path) -> None:
 
 
 def mount_ipod(device: str | None = None) -> None:
-    """Mount the iPod ``device`` to :data:`~ipod_sync.config.IPOD_MOUNT`.
+    """Mount the iPod ``device`` to :data:`~ipod_sync.config.config.IPOD_MOUNT`.
 
     Parameters
     ----------
@@ -169,7 +169,7 @@ def mount_ipod(device: str | None = None) -> None:
     if device is None:
         device = detect_ipod_device()
 
-    if str(device) == str(IPOD_DEVICE):
+    if str(device) == str(config.IPOD_DEVICE):
         try:
             device = str(wait_for_label())
         except FileNotFoundError:
@@ -178,11 +178,11 @@ def mount_ipod(device: str | None = None) -> None:
 
     wait_for_device(device)
 
-    mount_point: Path = IPOD_MOUNT
+    mount_point: Path = config.IPOD_MOUNT
     if os.path.ismount(mount_point):
         logger.debug("%s already mounted", mount_point)
         try:
-            Path(IPOD_STATUS_FILE).write_text("true")
+            Path(config.IPOD_STATUS_FILE).write_text("true")
         except Exception:
             logger.debug("Failed to update status file", exc_info=True)
         _ensure_sysinfo(device, mount_point)
@@ -214,7 +214,7 @@ def mount_ipod(device: str | None = None) -> None:
             return
         raise
     try:
-        Path(IPOD_STATUS_FILE).write_text("true")
+        Path(config.IPOD_STATUS_FILE).write_text("true")
     except Exception:  # pragma: no cover - filesystem errors
         logger.debug("Failed to update status file", exc_info=True)
 
@@ -223,9 +223,9 @@ def mount_ipod(device: str | None = None) -> None:
 
 def eject_ipod() -> None:
     """Unmount and eject the iPod currently mounted at
-    :data:`~ipod_sync.config.IPOD_MOUNT`."""
+    :data:`~ipod_sync.config.config.IPOD_MOUNT`."""
 
-    mount_point: Path = IPOD_MOUNT
+    mount_point: Path = config.IPOD_MOUNT
     if os.path.ismount(mount_point):
         device = str(mount_point)
         try:
@@ -247,6 +247,6 @@ def eject_ipod() -> None:
     else:
         logger.debug("%s not mounted", mount_point)
     try:
-        Path(IPOD_STATUS_FILE).unlink(missing_ok=True)
+        Path(config.IPOD_STATUS_FILE).unlink(missing_ok=True)
     except Exception:  # pragma: no cover - filesystem errors
         logger.debug("Failed to remove status file", exc_info=True)

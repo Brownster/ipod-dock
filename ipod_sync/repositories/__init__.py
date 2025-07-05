@@ -118,3 +118,19 @@ class PlaylistRepository(ABC):
     def remove_tracks_from_playlist(self, playlist_id: str, track_ids: List[str]) -> bool:
         """Remove tracks from a playlist."""
         pass
+
+# Import concrete implementations
+from .queue_repository import QueueRepository
+from .ipod_repository import IpodRepository
+from .local_repository import LocalRepository
+
+__all__ = [
+    'Track',
+    'Playlist', 
+    'TrackStatus',
+    'Repository',
+    'PlaylistRepository',
+    'QueueRepository',
+    'IpodRepository',
+    'LocalRepository',
+]

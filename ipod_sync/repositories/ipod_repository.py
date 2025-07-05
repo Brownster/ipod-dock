@@ -373,6 +373,27 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
             logger.error(f"Failed to remove tracks from playlist {playlist_id}: {e}")
             return False
     
+    def is_connected(self) -> bool:
+        """Return ``True`` if the iPod appears to be connected."""
+        if self._itdb:
+            return True
+        
+        # Check device path
+        if Path(self.device_path).exists():
+            return True
+        
+        # Check mount point
+        try:
+            with open("/proc/mounts", "r", encoding="utf-8") as fh:
+                for line in fh:
+                    parts = line.split()
+                    if parts and parts[0] == str(self.device_path):
+                        return True
+        except Exception:
+            pass
+            
+        return False
+
     def save_changes(self) -> bool:
         """Save all changes to iPod."""
         if self._itdb:

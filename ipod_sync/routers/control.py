@@ -57,9 +57,10 @@ async def trigger_sync(_: None = Depends(verify_api_key)):
 async def get_system_status(_: None = Depends(verify_api_key)):
     """Get system status information."""
     try:
-        from ..api_helpers import is_ipod_connected
-        
-        connected = is_ipod_connected(config.IPOD_DEVICE)
+        from ..repositories.factory import get_ipod_repo
+
+        repo = get_ipod_repo()
+        connected = repo.is_connected()
         
         return {
             "ipod_connected": connected,
