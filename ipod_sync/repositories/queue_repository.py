@@ -88,7 +88,10 @@ class QueueRepository(Repository):
             return file_path.parent.name
         
         # Check by file extension or metadata
-        audio_file = mutagen.File(str(file_path))
+        try:
+            audio_file = mutagen.File(str(file_path))
+        except Exception:
+            audio_file = None
         if audio_file:
             # Check for audiobook indicators
             genre = audio_file.get('TCON') or audio_file.get('\xa9gen') or audio_file.get('GENRE')
@@ -192,6 +195,10 @@ class QueueRepository(Repository):
             if source_path != dest_path:
                 import shutil
                 shutil.copy2(source_path, dest_path)
+                # If the source file resides inside the queue directory,
+                # remove it to avoid duplicate entries in get_tracks()
+                if source_path.parent == self.queue_dir:
+                    source_path.unlink(missing_ok=True)
         
         # Update metadata
         metadata = self._load_metadata()

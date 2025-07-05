@@ -45,6 +45,9 @@ Start the API server:
 python -m ipod_sync.app
 ```
 
+All REST endpoints are versioned under `/api/v1/`. When adding new routes use
+this prefix so clients can rely on a stable base URL.
+
 Launch the queue watcher (optional, triggers a sync when files appear):
 
 ```bash
