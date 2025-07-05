@@ -25,6 +25,17 @@ async def validate_configuration(_: None = Depends(verify_api_key)) -> SuccessRe
     except ConfigurationError as e:
         raise HTTPException(400, str(e))
 
+@router.post("/reload")
+async def reload_configuration(_: None = Depends(verify_api_key)) -> SuccessResponse:
+    """Reload configuration from files."""
+    try:
+        config_manager.reload_configuration()
+        return SuccessResponse(success=True, message="Configuration reloaded successfully")
+    except ConfigurationError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"Failed to reload configuration: {str(e)}")
+
 @router.get("/plugins/{plugin_id}")
 async def get_plugin_configuration(
     plugin_id: str,
@@ -45,3 +56,20 @@ async def set_plugin_configuration(
         success=True,
         message=f"Configuration updated for plugin {plugin_id}"
     )
+
+@router.get("/environment")
+async def get_environment_info(_: None = Depends(verify_api_key)) -> Dict[str, Any]:
+    """Get environment information for debugging."""
+    import os
+    import sys
+    from pathlib import Path
+
+    env_vars = {k: v for k, v in os.environ.items() if k.startswith("IPOD_")}
+
+    return {
+        "profile": config_manager.profile,
+        "python_version": sys.version,
+        "working_directory": str(Path.cwd()),
+        "environment_variables": env_vars,
+        "config_files_found": [str(f) for f in Path("config").glob("*.json") if f.exists()],
+    }
