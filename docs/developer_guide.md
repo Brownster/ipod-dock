@@ -69,6 +69,38 @@ Set environment variables to override defaults:
 
 Log files are written to `logs/ipod_sync.log` by default.
 
+## Plugin system
+
+Media source plugins live under `ipod_sync/plugins` and subclass
+`MediaSourcePlugin`. The global `plugin_manager` discovers and loads these
+plugins at runtime so new sources can be added without changing the core
+application.
+
+## Repository pattern
+
+Data access is encapsulated by repositories in `ipod_sync/repositories`. Use
+`RepositoryFactory.get_repository()` to obtain an implementation for the iPod,
+sync queue or local library. Repositories emit events when tracks or playlists
+change.
+
+## Event bus
+
+The `ipod_sync.events` module provides a simple event bus. Emit events using
+helpers such as `emit_sync_started()` and register listeners with
+`event_bus.on(EventType, handler)`.
+
+## Configuration manager
+
+`ConfigManager` loads `config/config.json` and optional profile files, applies
+environment variable overrides and validates the result. Call
+`reload_configuration()` to refresh settings at runtime.
+
+## API routers
+
+The FastAPI server is split into router modules under `ipod_sync/routers` for
+tracks, playlists, queue management, plugins and configuration. All routes are
+mounted under `/api/v1/` by `app.py`.
+
 ## Contributing
 
 Run the test suite before submitting patches:
