@@ -194,13 +194,27 @@ def listen(
             logger.debug("Event %s for %s", action, serial)
 
             if action == "add" and dev.device_type in {"usb_device", "partition"}:
-                target = device or dev.device_node
                 logger.info("iPod %s attached", serial)
                 _set_connected(True)
                 try:
-                    sync_queue(target)
+                    # Find the correct VFAT partition
+                    partition = find_ipod_partition(dev)
+                    if not partition:
+                        logger.error("Could not find VFAT partition on iPod")
+                        continue
+                    
+                    logger.info("Found iPod partition: %s", partition)
+                    
+                    # Mount the partition
+                    if mount_partition(partition, uid, gid):
+                        logger.info("Successfully mounted iPod, starting sync")
+                        # Sync using the mount point, not the device
+                        sync_queue(MOUNT_POINT)
+                    else:
+                        logger.error("Failed to mount iPod partition: %s", partition)
+                        
                 except Exception as exc:  # pragma: no cover - runtime errors
-                    logger.error("Failed to sync: %s", exc)
+                    logger.error("Failed to process iPod attachment: %s", exc)
 
             elif action == "remove" and dev.device_type == "usb_device":
                 logger.info("iPod %s removed", serial)

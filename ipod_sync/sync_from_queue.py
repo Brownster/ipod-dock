@@ -51,13 +51,13 @@ def _determine_file_category(file_path: Path) -> str:
     return 'music'
 
 
-def sync_queue(mount_point: str) -> None:
+def sync_queue(device_or_mount_point: str) -> None:
     """Process all files waiting in the sync queue.
 
     Parameters
     ----------
-    mount_point:
-        The path where the iPod is mounted.
+    device_or_mount_point:
+        Either a device path (like /dev/sdc2) to mount, or an already mounted path.
     """
     queue = Path(config_manager.config.sync_queue_dir)
     queue.mkdir(parents=True, exist_ok=True)
@@ -67,7 +67,15 @@ def sync_queue(mount_point: str) -> None:
         logger.info("No files to sync in %s", queue)
         return
 
-    mount_ipod(mount_point)
+    # Determine if we need to mount or if it's already mounted
+    if device_or_mount_point.startswith('/dev/'):
+        # It's a device path, we need to mount it
+        mount_ipod(device_or_mount_point)
+        mount_point = str(config_manager.config.ipod.mount_point)
+    else:
+        # It's already a mount point path
+        mount_point = device_or_mount_point
+        logger.debug("Using existing mount point: %s", mount_point)
 
     logger.info("Starting sync to %s", mount_point)
     repo = None
