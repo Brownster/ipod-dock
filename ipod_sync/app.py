@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from importlib import resources
 
-from .routers import tracks, playlists, queue, plugins, control, config as config_router
+from .routers import tracks, playlists, queue, plugins, control, config as config_router, integrity
 from .plugins.manager import plugin_manager
 from .logging_setup import setup_logging
 from . import config
@@ -77,6 +77,7 @@ app.include_router(queue.router)
 app.include_router(plugins.router)
 app.include_router(control.router)
 app.include_router(config_router.router)
+app.include_router(integrity.router)
 
 
 @app.exception_handler(Exception)

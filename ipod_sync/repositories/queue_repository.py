@@ -5,12 +5,14 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pathlib import Path
 import mimetypes
-import mutagen
+import logging
 
 from . import Repository, Track, TrackStatus
 from .base_repository import EventEmittingRepository
 from ..events import EventType
 from .. import config
+
+logger = logging.getLogger(__name__)
 
 class QueueRepository(Repository, EventEmittingRepository):
     """Repository for sync queue files."""
@@ -178,7 +180,10 @@ class QueueRepository(Repository, EventEmittingRepository):
         return None
     
     def add_track(self, track: Track) -> str:
-        """Add a track to queue (copy file if needed)."""
+        """Add a track to queue with comprehensive metadata extraction."""
+        from ..metadata import metadata_service
+        from ..integrity import file_integrity_manager
+        
         # Generate unique filename if needed
         if not track.file_path:
             filename = f"{track.title or 'unknown'}_{uuid.uuid4().hex[:8]}.mp3"
@@ -203,11 +208,39 @@ class QueueRepository(Repository, EventEmittingRepository):
                 if source_path.parent == self.queue_dir:
                     source_path.unlink(missing_ok=True)
         
-        # Update metadata
+        # Extract comprehensive metadata using new service
+        try:
+            if dest_path.exists():
+                comprehensive_metadata = metadata_service.extract_comprehensive_metadata(dest_path)
+                
+                # Calculate SHA1 hash for integrity
+                sha1_hash = file_integrity_manager.calculate_file_hash(dest_path)
+                comprehensive_metadata['sha1_hash'] = sha1_hash
+                
+                # Update track with extracted metadata
+                track.sha1_hash = sha1_hash
+                track.pc_path_utf8 = str(dest_path)
+                track.mtime = comprehensive_metadata.get('mtime')
+                track.orig_filesize = comprehensive_metadata.get('orig_filesize')
+                
+                # Update comprehensive fields if not already set
+                if not track.title and comprehensive_metadata.get('title'):
+                    track.title = comprehensive_metadata['title']
+                if not track.artist and comprehensive_metadata.get('artist'):
+                    track.artist = comprehensive_metadata['artist']
+                if not track.album and comprehensive_metadata.get('album'):
+                    track.album = comprehensive_metadata['album']
+                
+        except Exception as e:
+            logger.warning(f"Failed to extract metadata from {dest_path}: {e}")
+            comprehensive_metadata = {}
+        
+        # Update metadata storage
         metadata = self._load_metadata()
         file_id = str(dest_path.relative_to(self.queue_dir))
         
-        metadata[file_id] = {
+        # Store comprehensive metadata
+        track_metadata = {
             'title': track.title,
             'artist': track.artist,
             'album': track.album,
@@ -217,8 +250,15 @@ class QueueRepository(Repository, EventEmittingRepository):
             'bitrate': track.bitrate,
             'category': track.category,
             'date_added': (track.date_added or datetime.now()).isoformat(),
-            **((track.metadata or {}))
+            'sha1_hash': track.sha1_hash,
+            'pc_path_utf8': track.pc_path_utf8,
+            'mtime': track.mtime.isoformat() if track.mtime else None,
+            'orig_filesize': track.orig_filesize,
+            'sync_status': track.sync_status,
+            **comprehensive_metadata
         }
+        
+        metadata[file_id] = track_metadata
         self._save_metadata(metadata)
 
         # Emit event
