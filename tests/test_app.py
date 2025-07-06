@@ -9,8 +9,12 @@ from fastapi.testclient import TestClient
 from ipod_sync.app import app
 import ipod_sync.app as app_module
 from ipod_sync.repositories import Track, Playlist
+from ipod_sync import config
 
 client = TestClient(app)
+
+# Ensure no API key required during tests
+config.config_manager.config.server.api_key = None
 
 
 

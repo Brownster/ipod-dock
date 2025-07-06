@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import ipod_sync.utils as utils
+from ipod_sync import config
 
 
 @mock.patch("ipod_sync.utils.subprocess.run")
@@ -19,7 +20,8 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
     device = tmp_path / "sdb1"
     device.write_text("")
     with mock.patch("ipod_sync.config.config_manager.config.ipod.mount_point", mount_point), \
-         mock.patch("ipod_sync.config.config_manager.config.ipod_status_file", status), \
+         mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", status), \
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))
@@ -53,12 +55,12 @@ def test_mount_ipod_waits_for_label(mock_run, tmp_path):
     device = tmp_path / "sdb2"
     device.write_text("")
 
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+    with mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", status), \
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch.object(utils, "wait_for_label", return_value=device) as wfl, \
          mock.patch("os.geteuid", return_value=1000):
-        utils.mount_ipod(utils.IPOD_DEVICE)
+        utils.mount_ipod(config.IPOD_DEVICE)
         wfl.assert_called_once()
         mount_call = mock.call(
             [
@@ -88,13 +90,13 @@ def test_mount_ipod_label_missing_auto_detect(mock_run, tmp_path):
     device = tmp_path / "sdc1"
     device.write_text("")
 
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+    with mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", status), \
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch.object(utils, "wait_for_label", side_effect=FileNotFoundError), \
          mock.patch.object(utils, "detect_ipod_device", return_value=str(device)) as detect, \
          mock.patch("os.geteuid", return_value=1000):
-        utils.mount_ipod(utils.IPOD_DEVICE)
+        utils.mount_ipod(config.IPOD_DEVICE)
         detect.assert_called_once()
         mount_call = mock.call(
             [
@@ -122,8 +124,8 @@ def test_eject_ipod_calls_umount_and_eject(mock_run, tmp_path):
     mount_point = tmp_path / "mnt"
     status = tmp_path / "status"
     status.write_text("true")
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+    with mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", status), \
          mock.patch("os.geteuid", return_value=1000), \
          mock.patch("os.path.ismount", return_value=True):
         utils.eject_ipod()
@@ -177,8 +179,8 @@ def test_eject_ipod_skips_when_not_mounted(mock_run, tmp_path):
     mount_point = tmp_path / "mnt"
     status = tmp_path / "status"
     status.write_text("true")
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+    with mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", status), \
          mock.patch("os.path.ismount", return_value=False):
         utils.eject_ipod()
     mock_run.assert_not_called()
@@ -213,8 +215,8 @@ def test_mount_ipod_reports_sudo_password_error(mock_run, tmp_path, caplog):
     device = tmp_path / "sdb1"
     device.write_text("")
     caplog.set_level(logging.ERROR)
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", mount_point / "status"), \
+    with mock.patch("ipod_sync.config.IPOD_MOUNT", mount_point), \
+         mock.patch("ipod_sync.config.IPOD_STATUS_FILE", mount_point / "status"), \
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))
@@ -237,7 +239,7 @@ def test_detect_ipod_device_parses_lsblk(mock_run):
 
 @mock.patch("ipod_sync.utils.subprocess.run", side_effect=FileNotFoundError)
 def test_detect_ipod_device_fallback(mock_run):
-    with mock.patch.object(utils, "IPOD_DEVICE", "/dev/foo"):
+    with mock.patch("ipod_sync.config.IPOD_DEVICE", "/dev/foo"):
         dev = utils.detect_ipod_device()
     assert dev == "/dev/foo"
 
@@ -254,7 +256,7 @@ def test_mount_ipod_auto_detect(monkeypatch, tmp_path):
 
     monkeypatch.setattr(utils, "detect_ipod_device", fake_detect)
     monkeypatch.setattr(utils, "_run", lambda cmd, **kw: None)
-    monkeypatch.setattr(utils, "IPOD_MOUNT", Path("/tmp/mnt"))
+    monkeypatch.setattr("ipod_sync.config.IPOD_MOUNT", Path("/tmp/mnt"))
     monkeypatch.setattr(utils, "wait_for_device", lambda p, t=5.0: True)
 
     utils.mount_ipod(None)

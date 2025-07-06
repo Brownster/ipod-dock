@@ -10,8 +10,10 @@ sys.path.insert(0, str(ROOT))
 
 from ipod_sync.app import app
 from ipod_sync.repositories import Track, TrackStatus
+from ipod_sync import config
 
 client = TestClient(app)
+config.config_manager.config.server.api_key = None
 
 class TestTracksRouter:
     @patch('ipod_sync.routers.tracks.get_ipod_repo')
@@ -45,7 +47,7 @@ class TestTracksRouter:
 
     def test_authentication_required(self):
         """Test that endpoints require authentication."""
-        with patch('ipod_sync.config.API_KEY', 'secret'):
+        with patch('ipod_sync.config.config_manager.config.server.api_key', 'secret'):
             response = client.get("/api/v1/tracks")
 
         assert response.status_code == 401
