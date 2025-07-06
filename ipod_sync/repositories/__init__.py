@@ -12,7 +12,7 @@ class TrackStatus(Enum):
 
 @dataclass
 class Track:
-    """Unified track representation across all repositories."""
+    """Unified track representation across all repositories with gtkpod-inspired extended metadata."""
     id: str
     title: str
     artist: Optional[str] = None
@@ -31,6 +31,42 @@ class Track:
     status: TrackStatus = TrackStatus.ACTIVE
     category: str = "music"  # music, audiobook, podcast
     metadata: Optional[Dict[str, Any]] = None
+    
+    # Extended metadata inspired by gtkpod's ExtraTrackData
+    pc_path_utf8: Optional[str] = None     # Original PC file path (UTF-8)
+    mtime: Optional[datetime] = None       # File modification time
+    converted_file: Optional[str] = None   # Path to converted version if exists
+    orig_filesize: Optional[int] = None    # Size of original file before conversion
+    sha1_hash: Optional[str] = None        # SHA1 hash for integrity checking
+    charset: Optional[str] = None          # Character encoding used for ID3 tags
+    lyrics: Optional[str] = None           # Full lyrics text
+    
+    # Additional comprehensive metadata
+    year: Optional[int] = None             # Release year
+    track_total: Optional[int] = None      # Total tracks on album
+    disc_number: Optional[int] = None      # Disc number
+    disc_total: Optional[int] = None       # Total discs
+    composer: Optional[str] = None         # Composer name
+    albumartist: Optional[str] = None      # Album artist
+    bpm: Optional[int] = None              # Beats per minute
+    compilation: Optional[bool] = None     # Is compilation album
+    
+    # Sort fields for proper ordering
+    sort_artist: Optional[str] = None      # Artist sort name
+    sort_title: Optional[str] = None       # Title sort name
+    sort_album: Optional[str] = None       # Album sort name
+    sort_albumartist: Optional[str] = None # Album artist sort name
+    
+    # Podcast/audiobook specific fields
+    description: Optional[str] = None      # Episode/chapter description
+    podcasturl: Optional[str] = None       # Podcast URL
+    podcastrss: Optional[str] = None       # Podcast RSS feed
+    subtitle: Optional[str] = None         # Episode subtitle
+    
+    # Sync tracking
+    sync_status: str = "pending"           # pending, synced, error
+    last_synced: Optional[datetime] = None # Last sync timestamp
+    sync_error: Optional[str] = None       # Last sync error message
 
 @dataclass 
 class Playlist:

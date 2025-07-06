@@ -13,5 +13,8 @@ __all__ = [
     "logging_setup",
     "aap_controller",
     "templates",
+    "integrity",
+    "metadata",
+    "smart_playlists",
 ]
 
