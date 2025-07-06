@@ -18,8 +18,8 @@ def test_mount_ipod_calls_mount(mock_run, tmp_path):
     status = tmp_path / "status"
     device = tmp_path / "sdb1"
     device.write_text("")
-    with mock.patch.object(utils, "IPOD_MOUNT", mount_point), \
-         mock.patch.object(utils, "IPOD_STATUS_FILE", status), \
+    with mock.patch("ipod_sync.config.config_manager.config.ipod.mount_point", mount_point), \
+         mock.patch("ipod_sync.config.config_manager.config.ipod_status_file", status), \
          mock.patch.object(utils, "wait_for_device", return_value=True), \
          mock.patch("os.geteuid", return_value=1000):
         utils.mount_ipod(str(device))

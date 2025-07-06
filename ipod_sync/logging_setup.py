@@ -6,10 +6,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from . import config
+from .config import config_manager
 
 
-DEFAULT_LOG_FILE = config.LOG_DIR / "ipod_sync.log"
+DEFAULT_LOG_FILE = config_manager.config.log_dir / "ipod_sync.log"
 
 
 def setup_logging(log_file: Path | str | None = None, level: int = logging.INFO) -> None:
@@ -21,7 +21,7 @@ def setup_logging(log_file: Path | str | None = None, level: int = logging.INFO)
     """
 
     path = Path(log_file) if log_file else DEFAULT_LOG_FILE
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     handler = RotatingFileHandler(path, maxBytes=1_048_576, backupCount=3)
     formatter = logging.Formatter(

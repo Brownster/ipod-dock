@@ -21,7 +21,7 @@ def test_setup_logging_creates_rotating_handler(tmp_path):
 
 def test_setup_logging_defaults(tmp_path, monkeypatch):
     log_dir = tmp_path / "logs"
-    monkeypatch.setattr("ipod_sync.logging_setup.LOG_DIR", log_dir)
+    monkeypatch.setattr("ipod_sync.config.config_manager.config.log_dir", log_dir)
     monkeypatch.setattr("ipod_sync.logging_setup.DEFAULT_LOG_FILE", log_dir / "ipod_sync.log")
     setup_logging(level=logging.INFO)
     log_file = log_dir / "ipod_sync.log"

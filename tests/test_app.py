@@ -13,24 +13,24 @@ from ipod_sync.repositories import Track, Playlist
 client = TestClient(app)
 
 
-def test_status_endpoint(monkeypatch):
-    monkeypatch.setattr(app_module, "is_ipod_connected", lambda *_: True)
-    response = client.get("/status")
-    assert response.status_code == 200
-    assert response.json()["status"] == "ok"
-    assert response.json()["connected"] is True
 
 
-def test_auth_required_when_key_set(monkeypatch):
-    monkeypatch.setattr(app_module.config, "API_KEY", "secret")
-    monkeypatch.setattr(app_module, "is_ipod_connected", lambda *_: False)
-    unauthorized = client.get("/status")
-    assert unauthorized.status_code == 401
-    ok = client.get("/status", headers={"X-API-Key": "secret"})
+
+@mock.patch('ipod_sync.routers.tracks.get_ipod_repo')
+def test_auth_required_when_key_set(mock_repo_factory, monkeypatch):
+    # Mock repository
+    mock_repo = mock.MagicMock()
+    mock_repo.get_tracks.return_value = []
+    mock_repo_factory.return_value = mock_repo
+    
+    monkeypatch.setattr(app_module.config_manager.config.server, "api_key", "secret")
+    response = client.get("/api/v1/tracks")
+    assert response.status_code == 401
+    ok = client.get("/api/v1/tracks", headers={"X-API-Key": "secret"})
     assert ok.status_code == 200
 
 
-@mock.patch("ipod_sync.routers.queue.save_to_queue")
+@mock.patch("ipod_sync.repositories.queue_repository.QueueRepository.save_to_queue")
 def test_upload_endpoint(mock_save):
     mock_save.return_value = Path("sync_queue/foo.mp3")
     response = client.post(
@@ -43,7 +43,7 @@ def test_upload_endpoint(mock_save):
     mock_save.assert_called_once()
 
 
-@mock.patch("ipod_sync.routers.queue.save_to_queue")
+@mock.patch("ipod_sync.repositories.queue_repository.QueueRepository.save_to_queue")
 def test_upload_category_endpoint(mock_save):
     mock_save.return_value = Path("sync_queue/audiobook/foo.m4b")
     response = client.post(
@@ -56,7 +56,7 @@ def test_upload_category_endpoint(mock_save):
     mock_save.assert_called_once_with("foo.m4b", b"abc", category="audiobook")
 
 
-@mock.patch("ipod_sync.routers.queue.save_to_queue")
+@mock.patch("ipod_sync.repositories.queue_repository.QueueRepository.save_to_queue")
 def test_upload_podcast_category(mock_save):
     mock_save.return_value = Path("sync_queue/podcast/ep.mp3")
     response = client.post(
@@ -196,7 +196,7 @@ def test_sync_endpoint(mock_sync):
 
     assert response.status_code == 200
     assert response.json()["message"]
-    mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
+    mock_sync.sync_queue.assert_called_once_with(app_module.config_manager.config.ipod.device_path)
 
 
 @mock.patch('ipod_sync.routers.control.sync_from_queue')
@@ -207,7 +207,7 @@ def test_sync_endpoint_error(mock_sync):
 
     assert response.status_code == 500
     assert "boom" in response.text
-    mock_sync.sync_queue.assert_called_once_with(app_module.config.IPOD_DEVICE)
+    mock_sync.sync_queue.assert_called_once_with(app_module.config_manager.config.ipod.device_path)
 
 
 

@@ -43,7 +43,7 @@ def sync_queue(mount_point: str) -> None:
         try:
             repo = get_ipod_repo(mount_point)
             to_sync = converter.prepare_for_sync(file)
-            track = Track(title=to_sync.stem, file_path=str(to_sync))
+            track = Track(id=str(to_sync), title=to_sync.stem, file_path=str(to_sync))
             track_id = repo.add_track(track)
             size = to_sync.stat().st_size
             logger.info(
