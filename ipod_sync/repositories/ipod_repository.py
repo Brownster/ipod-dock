@@ -364,7 +364,24 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
             try:
                 gpod_track.copy_to_ipod()
                 ipod_path = gpod_track['ipod_path']
-                logger.info("Copied file to iPod using copy_to_ipod(): %s -> %s", track.file_path, ipod_path)
+                
+                # Verify the file was actually copied (libgpod sometimes silently fails)
+                if ipod_path:
+                    # Convert colon-separated path to filesystem path
+                    path_parts = str(ipod_path).split(':')
+                    if len(path_parts) > 1:
+                        filesystem_path = os.path.join(str(config_manager.config.ipod.mount_point), *path_parts[1:])
+                        if os.path.exists(filesystem_path):
+                            logger.info("Copied file to iPod using copy_to_ipod(): %s -> %s", track.file_path, ipod_path)
+                        else:
+                            logger.warning("copy_to_ipod() set path but file doesn't exist: %s. Using manual copy.", filesystem_path)
+                            raise Exception("File not actually copied")
+                    else:
+                        logger.warning("Invalid iPod path format: %s. Using manual copy.", ipod_path)
+                        raise Exception("Invalid path format")
+                else:
+                    logger.warning("copy_to_ipod() didn't set ipod_path. Using manual copy.")
+                    raise Exception("No ipod_path set")
             except Exception as copy_error:
                 logger.warning("copy_to_ipod() failed: %s. Using manual copy.", copy_error)
                 
