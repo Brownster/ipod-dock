@@ -121,10 +121,15 @@ def sync_queue(mount_point: str) -> None:
         # Save all changes to iPod database
         if repo and success_count > 0:
             logger.info("Saving changes to iPod database...")
-            if repo.save_changes():
-                logger.info("Successfully saved %d tracks to iPod", success_count)
-            else:
-                logger.error("Failed to save changes to iPod database")
+            try:
+                if repo.save_changes():
+                    logger.info("Successfully saved %d tracks to iPod", success_count)
+                else:
+                    logger.error("Failed to save changes to iPod database")
+                    error_count += len(files) - success_count  # Mark remaining as errors
+            except Exception as save_error:
+                logger.error("Exception during save_changes(): %s", save_error)
+                error_count += len(files) - success_count
                 
     except Exception as exc:
         logger.error("Failed to initialize iPod repository: %s", exc)

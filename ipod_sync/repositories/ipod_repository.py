@@ -13,7 +13,7 @@ import os
 from . import Repository, PlaylistRepository, Track, Playlist, TrackStatus
 from .base_repository import EventEmittingRepository
 from ..events import EventType
-from .. import config
+from ..config import config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
     
     def __init__(self, device_path: str = None):
         EventEmittingRepository.__init__(self, "IpodRepository")
-        self.device_path = device_path or config.IPOD_DEVICE
+        self.device_path = device_path or config_manager.config.ipod.device_path
         self._itdb = None
     
     def _ensure_connected(self):
@@ -31,7 +31,7 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
             if gpod is None:
                 raise RuntimeError("python-gpod is not installed. Install with: apt-get install python3-gpod")
             
-            mount_point = str(config.IPOD_MOUNT)
+            mount_point = str(config_manager.config.ipod.mount_point)
             
             # Validate mount point exists
             if not Path(mount_point).exists():
@@ -369,7 +369,7 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
                 logger.warning("copy_to_ipod() failed: %s. Using manual copy.", copy_error)
                 
                 # Manual copy as fallback
-                music_dir = os.path.join(str(config.IPOD_MOUNT), 'iPod_Control', 'Music')
+                music_dir = os.path.join(str(config_manager.config.ipod.mount_point), 'iPod_Control', 'Music')
                 
                 # Find or create a music folder
                 folders = [f for f in os.listdir(music_dir) if f.startswith('F') and f[1:].isdigit()]
@@ -389,6 +389,9 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
                 shutil.copy2(track.file_path, dest_path)
                 
                 # Update track with file path
+                # Ensure userdata is initialized
+                if gpod_track.get('userdata') is None:
+                    gpod_track['userdata'] = {}
                 gpod_track['userdata']['filename'] = dest_path
                 gpod_track['ipod_path'] = dest_path
                 ipod_path = dest_path
