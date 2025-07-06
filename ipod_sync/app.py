@@ -15,7 +15,7 @@ from importlib import resources
 from .routers import tracks, playlists, queue, plugins, control, config as config_router, integrity
 from .plugins.manager import plugin_manager
 from .logging_setup import setup_logging
-from . import config
+from .config import config_manager
 
 from . import sync_from_queue
 from .routers.control import playback_controller
@@ -60,7 +60,7 @@ app = FastAPI(
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.config_manager.config.server.cors_origins,
+    allow_origins=config_manager.config.server.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -123,8 +123,8 @@ def main() -> None:
 
     uvicorn.run(
         "ipod_sync.app:app",
-        host=config.config_manager.config.server.host,
-        port=config.config_manager.config.server.port,
+        host=config_manager.config.server.host,
+        port=config_manager.config.server.port,
         log_level="info",
         reload=True,
     )

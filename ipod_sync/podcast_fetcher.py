@@ -8,7 +8,7 @@ import urllib.request
 
 import feedparser
 
-from . import config
+from .config import config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def fetch_podcasts(feed_url: str, queue_dir: Path | None = None) -> list[Path]:
         Paths of downloaded files.
     """
 
-    queue = Path(queue_dir) if queue_dir else Path(config.SYNC_QUEUE_DIR) / "podcast"
+    queue = Path(queue_dir) if queue_dir else Path(config_manager.config.sync_queue_dir) / "podcast"
     queue.mkdir(parents=True, exist_ok=True)
 
     feed = feedparser.parse(feed_url)

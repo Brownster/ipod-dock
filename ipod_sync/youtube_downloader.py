@@ -7,7 +7,7 @@ from pathlib import Path
 
 from yt_dlp import YoutubeDL
 
-from . import config
+from .config import config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def download_audio(
     queue_dir:
         Base queue directory. Defaults to ``config.SYNC_QUEUE_DIR``.
     """
-    queue = Path(queue_dir) if queue_dir else Path(config.SYNC_QUEUE_DIR)
+    queue = Path(queue_dir) if queue_dir else Path(config_manager.config.sync_queue_dir)
     if category:
         queue = queue / category
     queue.mkdir(parents=True, exist_ok=True)

@@ -10,7 +10,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from . import config
+from .config import config_manager
 from .logging_setup import setup_logging
 from .repositories.factory import get_ipod_repo
 from .repositories import Track
@@ -28,7 +28,7 @@ def sync_queue(mount_point: str) -> None:
     mount_point:
         The path where the iPod is mounted.
     """
-    queue = Path(config.SYNC_QUEUE_DIR)
+    queue = Path(config_manager.config.sync_queue_dir)
     queue.mkdir(parents=True, exist_ok=True)
 
     files = [f for f in sorted(queue.rglob('*')) if f.is_file()]
@@ -52,7 +52,7 @@ def sync_queue(mount_point: str) -> None:
                 size,
                 track_id,
             )
-            if not config.KEEP_LOCAL_COPY:
+            if not config_manager.config.keep_local_copy:
                 file.unlink(missing_ok=True)
                 if to_sync != file:
                     to_sync.unlink(missing_ok=True)
@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--device",
         dest="mount_point",
-        default=str(config.IPOD_MOUNT),
+        default=str(config_manager.config.ipod.mount_point),
         help="Path to iPod mount point",
     )
     args = parser.parse_args(argv)

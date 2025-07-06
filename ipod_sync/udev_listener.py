@@ -10,14 +10,14 @@ from typing import Iterable, Tuple
 
 import pyudev
 
-from . import config
+from .config import config_manager
 from .logging_setup import setup_logging
 from .sync_from_queue import sync_queue
 from . import utils
 from pathlib import Path
 
 # Path used to indicate connection status to other components
-STATUS_FILE = Path(config.IPOD_STATUS_FILE)
+STATUS_FILE = Path(config_manager.config.project_root) / "ipod_connected"
 MOUNT_POINT = "/opt/ipod-dock/mnt/ipod"
 MOUNT_USER = "ipod"
 

@@ -7,7 +7,7 @@ from typing import Optional
 
 import serial  # type: ignore
 
-from . import config
+from .config import config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ class SerialPlayback:
     """Send basic playback commands over the dock serial pins."""
 
     def __init__(self, port: str | None = None, baudrate: int | None = None) -> None:
-        self.port = port or config.PLAYBACK_SERIAL_PORT
-        self.baudrate = baudrate or config.PLAYBACK_BAUDRATE
+        self.port = port or config_manager.config.serial.port
+        self.baudrate = baudrate or config_manager.config.serial.baudrate
         self._serial: Optional[serial.Serial] = None
 
     def _open(self) -> serial.Serial:

@@ -10,7 +10,7 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from . import config
+from .config import config_manager
 from .logging_setup import setup_logging
 from .sync_from_queue import sync_queue
 
@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--queue-dir",
-        default=config.SYNC_QUEUE_DIR,
+        default=config_manager.config.sync_queue_dir,
         type=Path,
         help="Directory containing queued files",
     )
