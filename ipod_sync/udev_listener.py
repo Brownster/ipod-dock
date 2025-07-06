@@ -18,7 +18,7 @@ from pathlib import Path
 
 # Path used to indicate connection status to other components
 STATUS_FILE = Path(config_manager.config.project_root) / "ipod_connected"
-MOUNT_POINT = "/opt/ipod-dock/mnt/ipod"
+MOUNT_POINT = str(config_manager.config.ipod.mount_point)
 MOUNT_USER = "ipod"
 
 logger = logging.getLogger(__name__)

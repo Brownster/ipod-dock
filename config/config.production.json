@@ -9,5 +9,8 @@
     "conversion_bitrate": 256,
     "normalize_audio": true
   },
+  "ipod": {
+    "mount_point": "/mnt/ipod"
+  },
   "keep_local_copy": true
 }
