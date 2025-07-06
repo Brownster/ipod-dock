@@ -1,0 +1,16 @@
+begin:vcard
+version:3.0
+fn:<<<name>>>
+n:<<<name>>>;;;;
+title:<<<title>>>
+org:<<<org>>>
+note:<<<note>>>
+url;type=work:<<<url>>>
+adr;type=work;type=pref:;;<<<addr street>>>;<<<addr city>>>;<<<addr state>>>;<<<addr zip>>>;<<<addr country>>>
+label;type=work;type=pref:<<<addr street>>>\n<<<addr city>>>, <<<addr state>>> <<<addr zip>>>\n<<<addr country>>>
+adr;type=home:;;<<<addr street>>>;<<<addr city>>>;<<<addr state>>>;<<<addr zip>>>;<<<addr country>>>
+label;type=home:<<<addr street>>>\n<<<addr city>>>, <<<addr state>>> <<<addr zip>>>\n<<<addr country>>>
+tel;type=home:<<<home phone>>>
+tel;type=work:<<<work phone>>>
+tel;type=cell:<<<cell phone>>>
+end:vcard

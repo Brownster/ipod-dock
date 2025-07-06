@@ -1,4 +1,0 @@
-[Anjuta Plugin]
-Location=clarity:ClarityPlugin
-_Name=Clarity Plugin
-_Description=Stylish cover art display (requires opengl rendering support)

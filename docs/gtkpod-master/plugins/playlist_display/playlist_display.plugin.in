@@ -1,5 +1,0 @@
-[Anjuta Plugin]
-Location=playlist_display:PlaylistDisplayPlugin
-_Name=Playlist Display Plugin
-_Description=Playlist View
-UserActivatable=no

@@ -83,6 +83,18 @@ After the installer completes you can verify the `python-gpod` bindings by runni
 ./test_bindings.sh
 ```
 
+For comprehensive testing of the Python bindings, use the improved test script:
+
+```bash
+# Test reading iPod contents only
+python3 test_ipod_bindings.py --read-only
+
+# Test reading and adding a track
+python3 test_ipod_bindings.py --test-file /path/to/test.mp3
+```
+
+See [docs/python-gpod-testing.md](docs/python-gpod-testing.md) for detailed information about the Python bindings and testing patterns.
+
 Or of you prefer this will get the job done
 
 ```bash
