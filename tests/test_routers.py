@@ -45,8 +45,12 @@ class TestTracksRouter:
 
         assert response.status_code == 404
 
-    def test_authentication_required(self):
+    @patch('ipod_sync.routers.tracks.get_ipod_repo')
+    def test_authentication_required(self, mock_repo):
         """Test that endpoints require authentication."""
+        # Mock repository
+        mock_repo.return_value.get_tracks.return_value = []
+        
         with patch('ipod_sync.config.config_manager.config.server.api_key', 'secret'):
             response = client.get("/api/v1/tracks")
 
