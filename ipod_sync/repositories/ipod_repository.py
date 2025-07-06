@@ -368,8 +368,15 @@ class IpodRepository(Repository, PlaylistRepository, EventEmittingRepository):
                 # Verify the file was actually copied (libgpod sometimes silently fails)
                 if ipod_path:
                     # Convert colon-separated path to filesystem path
-                    path_parts = str(ipod_path).split(':')
+                    # Handle byte string format like b":iPod_Control:Music:F00:file.mp3"
+                    path_str = str(ipod_path)
+                    if path_str.startswith("b'") or path_str.startswith('b"'):
+                        # Remove b' or b" prefix and trailing quote
+                        path_str = path_str[2:-1]
+                    
+                    path_parts = path_str.split(':')
                     if len(path_parts) > 1:
+                        # Skip empty first part (before first colon)
                         filesystem_path = os.path.join(str(config_manager.config.ipod.mount_point), *path_parts[1:])
                         if os.path.exists(filesystem_path):
                             logger.info("Copied file to iPod using copy_to_ipod(): %s -> %s", track.file_path, ipod_path)
